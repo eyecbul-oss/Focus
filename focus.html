@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SezR Focus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="focus-style.css">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#020617">
+  <meta name="application-name" content="SezR Focus">
+  <meta name="apple-mobile-web-app-title" content="SezR Focus">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+</head>
+<body class="theme-rain">
+  <div id="rainLayer" class="rain-layer"></div>
+  <div id="symbolLayer" class="symbol-layer"></div>
+  <audio id="focusAudio" loop preload="metadata" playsinline></audio>
+
+  <section id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-brand">Sez<span>R</span> Focus</div>
+      <h1>Focus hesabına giriş yap</h1>
+      <p>Mail ve şifrenle giriş yap veya misafir devam et.</p>
+
+      <div class="auth-tabs">
+        <button id="loginTab" class="active">Giriş</button>
+        <button id="registerTab">Yeni Hesap</button>
+      </div>
+
+      <label>Mail adresi</label>
+      <input id="authEmail" type="email" placeholder="ogrenci@mail.com" autocomplete="email">
+
+      <label>Şifre</label>
+      <input id="authPassword" type="password" placeholder="Şifre" autocomplete="current-password">
+
+      <button id="authSubmit" class="auth-submit">Giriş Yap</button>
+      <button id="guestBtn" class="guest-btn">Misafir Olarak Devam Et</button>
+      <button id="forgotBtn" class="auth-link">Şifremi unuttum</button>
+
+      <div id="authMessage" class="auth-message"></div>
+    </div>
+  </section>
+
+  <div id="appPage" class="page hidden">
+    <header class="topbar">
+      <div class="logo">Sez<span>R</span> Focus</div>
+      <div id="profileChip" class="profile-chip">Hesap</div>
+      <nav>
+        <a href="index.html">Ana Sayfa</a>
+        <a href="dersler.html">Derslerim</a>
+        <a href="youtube.html">YouTube</a>
+        <a href="pdf.html">PDF</a>
+        <a class="active" href="focus.html">Focus</a>
+        <a href="iletisim.html">Kayıt</a>
+      </nav>
+    </header>
+<main class="hero">
+      <section class="intro">
+        <div class="badge">FOCUS ROOM</div>
+        <h1>Odaklan.<br><span>Başla.</span></h1>
+        <p>Tek ekran, tek plan, tek başlatma akışı. Sayaç ve müzik birlikte çalışır.</p>
+
+        <div class="plan-card">
+          <label for="taskInput">Bugünkü görevlerin</label>
+          <div class="plan-input-row">
+            <input id="taskInput" placeholder="Örn. Matematik: Türev 30 soru">
+            <button id="addTaskBtn">Ekle</button>
+          </div>
+          <div id="taskListMain" class="daily-task-list"></div>
+          <div class="task-actions">
+            <button id="clearDoneTasksBtn" class="soft-task-btn">Tamamlananları Temizle</button>
+            <button id="clearTasksBtn" class="clear-plan">Tümünü Temizle</button>
+          </div>
+          <div class="plan-progress">
+            <div id="planProgressFill"></div>
+          </div>
+          <div id="planProgressText" class="plan-progress-text">Görev ilerlemesi: %0</div>
+        </div>
+      </section>
+
+      <section class="focus-card">
+        <div class="timer-ring" id="timerRing">
+          <div class="timer-inner">
+            <div id="timerText">25:00</div>
+            <div id="timerStatus">Hazır</div>
+          </div>
+        </div>
+
+        <div class="primary-actions">
+          <button id="mainToggleBtn" class="main-toggle">Başlat</button>
+          <button id="resetBtn" class="soft-btn">Sıfırla</button>
+          <button id="fullscreenBtn" class="soft-btn icon-btn" title="Tam ekran odak modu">⛶</button>
+        </div>
+
+        <div class="mode-row">
+          <button class="mode active" data-min="25">25 dk</button>
+          <button class="mode" data-min="45">45 dk</button>
+          <button class="mode" data-min="60">60 dk</button>
+          <button class="mode" data-min="120">Deep</button>
+        </div>
+
+        <div class="break-card">
+          <div>
+            <b>Mola</b>
+            <span>Mola süresince sessiz kalır.</span>
+          </div>
+          <button class="break-btn" data-break="5">5 dk</button>
+          <button class="break-btn" data-break="10">10 dk</button>
+        </div>
+
+        <label class="auto-break">
+          <input id="autoBreak" type="checkbox">
+          Seans bitince 5 dk molayı otomatik başlat
+        </label>
+
+        <div id="aiAdvice" class="ai-advice">Başlamak için 25 dakikalık tek bir seans yeterli.</div>
+        <div id="nextSuggestion" class="next-suggestion"></div>
+      </section>
+    </main>
+
+    <section class="music-panel paused">
+      <div class="music-now">
+        <div>
+          <h2 id="trackTitle">Rain Focus</h2>
+          <p id="trackStatus">Müzik sayaçla birlikte başlar ve durur.</p>
+        </div>
+        <div class="eq" id="eq"><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <div class="music-controls">
+        <input id="volumeRange" type="range" min="0" max="100" value="60">
+        <strong id="volumeText">🔊 60%</strong>
+      </div>
+
+      <div class="track-grid">
+        <button class="track active" data-track="rain">🌧 Rain</button>
+        <button class="track" data-track="lofi">☕ Lo-fi</button>
+        <button class="track" data-track="piano">🎹 Piano</button>
+        <button class="track" data-track="relax">🌙 Relax</button>
+        <button class="track" data-track="jazz">🎷 Jazz</button>
+        <button class="track" data-track="fire">🔥 Fire</button>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat"><b id="todayMinutes">0 dk</b><span>Bugünkü çalışma</span></div>
+      <div class="stat"><b id="todayPomodoros">0</b><span>Bugünkü pomodoro</span></div>
+      <div class="stat"><b id="focusScore">0%</b><span>Focus puanı</span></div>
+      <div class="stat"><b id="streakDays">0</b><span>Çalışma serisi</span></div>
+      <div class="stat"><b id="taskCompletion">0%</b><span>Görev tamamlama</span></div>
+    </section>
+
+    <section id="examCountdownPanel" class="exam-panel">
+      <div class="exam-head">
+        <div>
+          <h2>Sınav Sayacı</h2>
+          <p id="examSubtitle">Sınava kalan süre</p>
+        </div>
+        <button id="toggleExamBtn">Gizle</button>
+      </div>
+
+      <div id="examContent">
+        <div class="exam-controls">
+          <select id="examGroupSelect">
+            <option value="YKS">YKS Grubu</option>
+            <option value="LGS">LGS</option>
+            <option value="KPSS">KPSS</option>
+            <option value="DGS">DGS</option>
+          </select>
+
+          <select id="examTypeSelect"></select>
+
+          <input id="examDateInput" type="date">
+
+          <button id="saveExamBtn">Kaydet</button>
+        </div>
+
+        <div class="exam-countdown-app">
+          <div class="big-days">
+            <b id="examDays">0</b>
+            <span>gün kaldı</span>
+          </div>
+          <div class="small-time">
+            <div><b id="examHours">0</b><span>saat</span></div>
+            <div><b id="examMinutes">0</b><span>dakika</span></div>
+            <div><b id="examSeconds">0</b><span>saniye</span></div>
+          </div>
+        </div>
+
+        <div id="examAdvice" class="exam-advice">Sınav seç ve kaydet.</div>
+        <div id="examMiniPlan" class="exam-mini-plan"></div>
+        <div id="studyIntensity" class="study-intensity"></div>
+        <button id="addExamTaskBtn" class="exam-task-btn">Bugüne önerilen görev ekle</button>
+      </div>
+    </section>
+
+    <section class="weekly-panel">
+      <div class="weekly-head">
+        <h2>Haftalık Özet</h2>
+        <span id="weeklyTotal">0 dk</span>
+      </div>
+      <div id="weekBars" class="week-bars"></div>
+      <div id="weeklyInsight" class="weekly-insight">Haftalık analiz hazırlanıyor.</div>
+    </section>
+<section class="rhythm-card">
+      <div>
+        <h2>Çalışma Ritmi</h2>
+        <p id="rhythmText">Ritim analizi için birkaç seans gerekli.</p>
+      </div>
+      <div class="rhythm-stats">
+        <div><b id="weeklyAverage">0 dk</b><span>Haftalık ortalama</span></div>
+        <div><b id="bestDay">0 dk</b><span>En iyi gün</span></div>
+      </div>
+    </section>
+
+    <section class="bottom-grid">
+      <div class="panel">
+        <h2>Günlük İlerleme</h2>
+        <div class="target-row modern-target-row">
+          <span>Günlük hedef</span>
+          <div class="target-options" id="dailyTargetOptions">
+            <button data-target="30">30 dk</button>
+            <button data-target="45">45 dk</button>
+            <button data-target="60" class="active">60 dk</button>
+            <button data-target="90">90 dk</button>
+            <button data-target="120">120 dk</button>
+          </div>
+        </div>
+        <div class="progress"><div id="progressFill"></div></div>
+        <div id="progressText" class="progress-text">0 / 60 dk</div>
+        <div id="focusLevel" class="focus-level">Başlangıç seviyesi</div>
+        <div id="targetAdvice" class="target-advice">Hedefe başlamak için ilk seansı başlat.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Notlar</h2>
+        <div class="note-row">
+          <input id="noteInput" placeholder="Kısa not ekle">
+          <button id="addNoteBtn">Ekle</button>
+        </div>
+        <div id="noteList" class="list"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Son </h2>
+        <div id="sessionList" class="list"></div>
+      </div>
+    </section>
+</div>
+
+  <section id="focusOverlay" class="focus-overlay">
+    <div id="overlayControls" class="overlay-controls">
+      <button id="overlayToggleBtn">Başlat</button>
+      <button id="overlayResetBtn">Sıfırla</button>
+      <button id="overlayExitBtn">Çık</button>
+    </div>
+
+    <div class="overlay-timer-wrap">
+      <div id="overlayTimer">25:00</div>
+      <div id="overlayStatus">Hazır</div>
+      <div id="overlaySubStatus" class="overlay-sub-status">Başlamak için hazır.</div>
+      
+      <div id="overlayQuote" class="overlay-quote">Sadece bu seans.</div>
+    </div>
+  </section>
+
+  <button id="settingsBtn" class="settings-btn hidden" aria-label="Ayarlar"><span>⚙</span></button>
+  <aside id="settingsPanel" class="settings-panel">
+    <div class="settings-head">
+      <div>
+        <h2>Hesap</h2>
+        <p id="accountEmail">Yükleniyor...</p>
+      </div>
+      <button id="closeSettingsBtn" class="close-settings">×</button>
+    </div>
+
+    <div id="syncStatus" class="sync-card">
+      <b>Bulut aktif</b>
+      <span>Kayıtların hesabına bağlı.</span>
+    </div>
+
+    <div id="cloudSyncStatus" class="cloud-sync-status">Bulut durumu kontrol ediliyor.</div>
+    <button id="compactModeBtn" class="logout-clean">Sade Görünüm</button>
+    <button id="logoutBtn" class="logout-clean">Çıkış Yap</button>
+  </aside>
+
+  <div id="breakModal" class="break-modal">
+    <div class="break-modal-box">
+      <div class="break-modal-label">Mola</div>
+      <div id="breakModalTimer">05:00</div>
+      <p id="breakModalInfo">Molayı bitirince çalışma süren kaldığı yerden devam eder.</p>
+      <div class="break-modal-actions">
+        <button id="breakStartPauseBtn">Başlat</button>
+        <button id="breakFinishBtn">Bitir ve Dön</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="successModal" class="modal">
+    <div class="modal-box">
+      <h2>Seans Tamamlandı 🔥</h2>
+      <p>Kısa bir mola ver. Sonra devam edebilirsin.</p>
+      <button id="closeModalBtn">Tamam</button>
+    </div>
+  </div>
+
+  <script src="focus-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="focus-app.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
+          console.log('Service worker registration failed:', err);
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
