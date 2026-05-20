@@ -1,17 +1,12 @@
 {
   "name": "sezr-focus",
   "version": "1.0.0",
-  "description": "SezR Focus öğrenci çalışma koçu",
-  "main": "index.js",
-  "scripts": {
-    "build": "echo \"Static app ready\"",
-    "cap:add": "npx cap add android",
-    "cap:sync": "npx cap sync android"
-  },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }
