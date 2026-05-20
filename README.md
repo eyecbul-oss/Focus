@@ -23,3 +23,7 @@ Premium dark temalı öğrenci çalışma koçu uygulaması.
 
 ## Düzeltme
 Bu sürümde GitHub Actions NodeJS 22 kullanır. Capacitor CLI artık NodeJS >=22 istediği için build hatası giderildi.
+
+
+## Final düzeltme
+TypeScript hatası çözülmüştür. `capacitor.config.ts` kaldırıldı, yerine `capacitor.config.json` eklendi.
