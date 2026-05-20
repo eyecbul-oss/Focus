@@ -18,14 +18,17 @@ jobs:
         with:
           node-version: 22
 
-      - name: Java 17 kur
+      - name: Java 21 kur
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Paketleri kur
         run: npm install
+
+      - name: Android platformunu temizle
+        run: rm -rf android
 
       - name: Android platformunu ekle
         run: npx cap add android
