@@ -1,29 +1,11 @@
-# SezR Focus
-
-Premium dark temalı öğrenci çalışma koçu uygulaması.
-
-## GitHub üzerinden APK üretme
-
-1. GitHub'da yeni repo aç.
-2. Bu ZIP içindeki tüm dosyaları repoya yükle.
-3. Repo içinde `Actions` sekmesine gir.
-4. `Build Android APK` workflow'unu aç.
-5. `Run workflow` butonuna bas.
-6. Build bitince alttaki `Artifacts` bölümünden APK dosyasını indir.
-
-## Ana klasörler
-
-- `www/index.html`
-- `www/css/style.css`
-- `www/js/app.js`
-- `.github/workflows/build-apk.yml`
-- `package.json`
-- `capacitor.config.ts`
-
-
-## Düzeltme
-Bu sürümde GitHub Actions NodeJS 22 kullanır. Capacitor CLI artık NodeJS >=22 istediği için build hatası giderildi.
-
-
-## Final düzeltme
-TypeScript hatası çözülmüştür. `capacitor.config.ts` kaldırıldı, yerine `capacitor.config.json` eklendi.
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { COLORS } from '../../theme/colors';
+const fmt=(sec:number)=>`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+export default function TimerRing({remaining}:{remaining:number}){
+  return <View style={styles.ring}><Text style={styles.time}>{fmt(remaining)}</Text><Text style={styles.label}>Odak Modu</Text></View>;
+}
+const styles=StyleSheet.create({
+  ring:{width:260,height:260,borderRadius:130,alignItems:'center',justifyContent:'center',alignSelf:'center',backgroundColor:'rgba(15,23,42,.72)',borderWidth:2,borderColor:'rgba(250,204,21,.42)',shadowColor:COLORS.primary,shadowOpacity:.25,shadowRadius:34,elevation:18},
+  time:{color:COLORS.text,fontSize:58,fontWeight:'900',letterSpacing:-2}, label:{color:COLORS.primary,fontWeight:'900',marginTop:8}
+});
