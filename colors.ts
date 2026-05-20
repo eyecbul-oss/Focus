@@ -1,9 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-export default function useFocusTimer(initialSeconds:number){
-  const [remaining,setRemaining]=useState(initialSeconds);
-  const [running,setRunning]=useState(false);
-  const ref=useRef<any>(null);
-  useEffect(()=>{setRemaining(initialSeconds);setRunning(false)},[initialSeconds]);
-  useEffect(()=>{if(!running)return;ref.current=setInterval(()=>setRemaining(r=>{if(r<=1){setRunning(false);return 0}return r-1}),1000);return()=>clearInterval(ref.current)},[running]);
-  return {remaining,running,start:()=>setRunning(true),pause:()=>setRunning(false),reset:()=>{setRunning(false);setRemaining(initialSeconds)}};
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
+import { FocusTask, FocusNote } from '../store/focusStore';
+
+export type CloudFocusData = {
+  tasks: FocusTask[];
+  notes: FocusNote[];
+  totalToday: number;
+  pomodoros: number;
+  updatedAt: string;
+};
+
+export async function saveCloudData(uid: string, data: CloudFocusData) {
+  await setDoc(doc(db, 'focusUsers', uid), data, { merge: true });
+}
+
+export async function loadCloudData(uid: string): Promise<CloudFocusData | null> {
+  const snap = await getDoc(doc(db, 'focusUsers', uid));
+  return snap.exists() ? (snap.data() as CloudFocusData) : null;
 }
