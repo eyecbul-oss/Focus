@@ -1,44 +1,94 @@
-import { useEffect } from 'react';
-import { useFocusStore } from '../store/focusStore';
-import { loadFocusState, saveFocusState } from '../services/localPersistence';
-import { useAuthStore } from '../store/authStore';
-import { loadCloudData, saveCloudData } from '../services/cloudSyncService';
+// 🔐 Firebase Kimlik Doğrulama Servisi - Focus Uygulaması
+import { auth } from './firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  User,
+} from 'firebase/auth';
 
-export default function useAppBootstrap() {
-  const hydrate = useFocusStore((s) => s.hydrate);
-  const snapshot = useFocusStore((s) => s.snapshot);
-  const email = useAuthStore((s) => s.email);
-  const guest = useAuthStore((s) => s.guest);
-  const setCloudStatus = useAuthStore((s) => s.setCloudStatus);
+export type AuthUser = {
+  uid: string;
+  email: string;
+};
 
-  useEffect(() => {
-    loadFocusState().then((local) => {
-      if (local) hydrate(local);
-    });
-  }, [hydrate]);
+/**
+ * Email ve şifre ile kullanıcı kaydı oluştur
+ */
+export async function registerWithEmail(email: string, password: string): Promise<AuthUser> {
+  if (!email || !password) {
+    throw new Error('Email ve şifre gerekli');
+  }
 
-  useEffect(() => {
-    const unsubscribe = useFocusStore.subscribe((state) => {
-      saveFocusState({ ...state.snapshot(), updatedAt: new Date().toISOString() });
-    });
-    return unsubscribe;
-  }, []);
+  if (password.length < 6) {
+    throw new Error('Şifre en az 6 karakter olmalı');
+  }
 
-  useEffect(() => {
-    async function sync() {
-      if (!email || guest) return;
-
-      try {
-        const uid = email.replace(/[^a-zA-Z0-9]/g, '_');
-        const cloud = await loadCloudData(uid);
-        if (cloud) hydrate(cloud);
-        await saveCloudData(uid, { ...snapshot(), updatedAt: new Date().toISOString() });
-        setCloudStatus('Bulut senkron aktif');
-      } catch (e) {
-        setCloudStatus('Bulut senkron beklemede');
-      }
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return {
+      uid: result.user.uid,
+      email: result.user.email || email,
+    };
+  } catch (error: any) {
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('Bu email adı zaten kullanılıyor');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Geçersiz email formatı');
+    } else if (error.code === 'auth/weak-password') {
+      throw new Error('Şifre çok zayıf');
     }
+    throw new Error(error.message || 'Hesap oluşturulamadı');
+  }
+}
 
-    sync();
-  }, [email, guest]);
+/**
+ * Email ve şifre ile giriş yap
+ */
+export async function loginWithEmail(email: string, password: string): Promise<AuthUser> {
+  if (!email || !password) {
+    throw new Error('Email ve şifre gerekli');
+  }
+
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return {
+      uid: result.user.uid,
+      email: result.user.email || email,
+    };
+  } catch (error: any) {
+    if (error.code === 'auth/user-not-found') {
+      throw new Error('Kullanıcı bulunamadı');
+    } else if (error.code === 'auth/wrong-password') {
+      throw new Error('Şifre yanlış');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Geçersiz email formatı');
+    } else if (error.code === 'auth/too-many-requests') {
+      throw new Error('Çok fazla başarısız deneme. Lütfen sonra tekrar deneyin.');
+    }
+    throw new Error(error.message || 'Giriş yapılamadı');
+  }
+}
+
+/**
+ * Çıkış yap
+ */
+export async function logout(): Promise<void> {
+  try {
+    await signOut(auth);
+  } catch (error: any) {
+    throw new Error(error.message || 'Çıkış yapılamadı');
+  }
+}
+
+/**
+ * Mevcut kullanıcı bilgilerini al
+ */
+export function getCurrentUser(): AuthUser | null {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return {
+    uid: user.uid,
+    email: user.email || 'unknown@example.com',
+  };
 }
