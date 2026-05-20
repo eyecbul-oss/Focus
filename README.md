@@ -19,3 +19,7 @@ Premium dark temalı öğrenci çalışma koçu uygulaması.
 - `.github/workflows/build-apk.yml`
 - `package.json`
 - `capacitor.config.ts`
+
+
+## Düzeltme
+Bu sürümde GitHub Actions NodeJS 22 kullanır. Capacitor CLI artık NodeJS >=22 istediği için build hatası giderildi.
