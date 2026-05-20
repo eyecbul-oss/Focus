@@ -1,0 +1,17 @@
+Uygulama adı: SezR Focus
+
+Kısa açıklama:
+Görev, odak sayacı, mola ve sınav geri sayımı.
+
+Uzun açıklama:
+SezR Focus, öğrencilerin çalışma sürecini sade ve etkili şekilde yönetmesi için tasarlanmış bir odak uygulamasıdır.
+
+Özellikler:
+- Günlük görev takibi
+- Odak / pomodoro sayacı
+- Tam ekran focus modu
+- Ayrı mola ekranı
+- Sınav geri sayımı
+- Not alma
+- Haftalık ilerleme
+- Bulut senkron desteği

@@ -1,0 +1,5 @@
+App adı: SezR Focus
+Subtitle: Odaklan, görevlerini tamamla.
+
+Açıklama:
+SezR Focus; öğrenciler için görev, odak sayacı, mola ve sınav geri sayımı özelliklerini bir araya getirir.
