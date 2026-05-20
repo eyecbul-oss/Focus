@@ -1,7 +1,7 @@
 {
   "name": "SezR Focus",
   "short_name": "SezR Focus",
-  "description": "Öğrenci koçu, focus modları, görev takibi, mola ve sınav sayacı.",
+  "description": "Bağımsız öğrenci çalışma koçu.",
   "start_url": "./focus.html",
   "scope": "./",
   "display": "standalone",

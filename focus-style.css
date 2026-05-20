@@ -2002,3 +2002,22 @@ body.exam-mode .music-panel{
     display:grid;
   }
 }
+
+
+/* STANDALONE APP MODE */
+.topbar,.topbar nav,nav:not(.app-bottom-nav){display:none!important}
+.page{max-width:1180px!important;padding:16px 16px 106px!important}
+.app-shell-top{position:sticky;top:10px;z-index:900;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;border-radius:26px;background:rgba(2,6,23,.86);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(20px);box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.app-brand-block{display:flex;align-items:center;gap:12px;min-width:0}
+.app-logo-mark{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(180deg,rgba(250,204,21,.20),rgba(250,204,21,.08));border:1px solid rgba(250,204,21,.28);color:#fff;font-family:Montserrat;font-weight:900;font-size:21px}
+.app-logo-mark span{color:#facc15}
+.app-title{font-family:Montserrat;font-weight:900;font-size:23px;line-height:1.1}
+.app-subtitle{color:#94a3b8;font-weight:900;font-size:13px;margin-top:3px}
+.app-top-btn{width:48px;height:48px;border-radius:17px;border:1px solid rgba(255,255,255,.13);background:rgba(15,23,42,.86);color:#f8fafc;font-weight:900;font-size:20px;cursor:pointer}
+.app-bottom-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:950;width:min(620px,calc(100vw - 24px));display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:9px;border-radius:26px;background:rgba(2,6,23,.88);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(22px);box-shadow:0 18px 60px rgba(0,0,0,.38)}
+.app-bottom-nav a{min-height:48px;display:grid;place-items:center;border-radius:18px;text-decoration:none;color:#dbeafe;font-weight:900;font-size:13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06)}
+.app-bottom-nav a:hover,.app-bottom-nav a.active{color:#111827;background:linear-gradient(180deg,#facc15,#eab308);border-color:#facc15}
+.hero{min-height:auto!important;padding-top:22px!important}
+.settings-btn{display:none!important}
+#settingsPanel{bottom:92px!important}
+@media(max-width:720px){.page{padding:12px 12px 104px!important}.app-shell-top{top:8px;border-radius:22px}.app-logo-mark{width:46px;height:46px;border-radius:16px}.app-title{font-size:20px}.app-subtitle{font-size:12px}.app-bottom-nav{bottom:10px;border-radius:24px}.app-bottom-nav a{min-height:46px;font-size:12px}}

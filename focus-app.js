@@ -1255,6 +1255,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if($("closeModalBtn")) $("closeModalBtn").onclick = () => { $("successModal").classList.remove("show"); reset(); };
 
+  
+  if($("appSettingsTopBtn")) $("appSettingsTopBtn").onclick = () => {
+    if($("settingsPanel")) $("settingsPanel").classList.toggle("show");
+  };
+
+  document.querySelectorAll(".app-bottom-nav a").forEach(link=>{
+    link.onclick = (e) => {
+      e.preventDefault();
+      const el = document.getElementById(link.dataset.scrollTarget);
+      if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+      document.querySelectorAll(".app-bottom-nav a").forEach(a=>a.classList.remove("active"));
+      link.classList.add("active");
+    };
+  });
+
   document.addEventListener("keydown", e => {
     const tag = (e.target.tagName || "").toLowerCase();
     if(e.key === "Escape" && $("breakModal") && $("breakModal").classList.contains("show")){ finishBreak(true); return; }

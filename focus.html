@@ -41,20 +41,17 @@
   </section>
 
   <div id="appPage" class="page hidden">
-    <header class="topbar">
-      <div class="logo">Sez<span>R</span> Focus</div>
-      <div id="profileChip" class="profile-chip">Hesap</div>
-      <nav>
-        <a href="index.html">Ana Sayfa</a>
-        <a href="dersler.html">Derslerim</a>
-        <a href="youtube.html">YouTube</a>
-        <a href="pdf.html">PDF</a>
-        <a class="active" href="focus.html">Focus</a>
-        <a href="iletisim.html">Kayıt</a>
-      </nav>
+    <header class="app-shell-top">
+      <div class="app-brand-block">
+        <div class="app-logo-mark">S<span>R</span></div>
+        <div>
+          <div class="app-title">SezR Focus</div>
+          <div id="appSubtitle" class="app-subtitle">Öğrenci çalışma koçu</div>
+        </div>
+      </div>
+      <button id="appSettingsTopBtn" class="app-top-btn">⚙</button>
     </header>
-
-    <section class="coach-panel">
+<section id="coach" class="coach-panel">
       <div class="coach-main">
         <div class="coach-badge">Öğrenci Koçu</div>
         <h2 id="coachTitle">Bugünkü planını hazırlayalım.</h2>
@@ -110,7 +107,7 @@
         <h1>Odaklan.<br><span>Başla.</span></h1>
         <p>Tek ekran, tek plan, tek başlatma akışı. Sayaç ve müzik birlikte çalışır.</p>
 
-        <div class="plan-card">
+        <div id="tasks" class="plan-card">
           <label for="taskInput">Bugünkü görevlerin</label>
           <div class="plan-input-row">
             <input id="taskInput" placeholder="Örn. Matematik: Türev 30 soru">
@@ -144,7 +141,7 @@
         </div>
       </section>
 
-      <section class="focus-card">
+      <section id="timer" class="focus-card">
         <div class="timer-ring" id="timerRing">
           <div class="timer-inner">
             <div id="timerText">25:00</div>
@@ -216,7 +213,7 @@
       <div class="stat"><b id="taskCompletion">0%</b><span>Görev tamamlama</span></div>
     </section>
 
-    <section id="examCountdownPanel" class="exam-panel">
+    <section id="exam" class="exam-panel">
       <div class="exam-head">
         <div>
           <h2>Sınav Sayacı</h2>
