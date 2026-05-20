@@ -3,151 +3,218 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#050816" />
   <title>SezR Focus</title>
   <link rel="stylesheet" href="css/style.css" />
   <script defer src="js/app.js"></script>
 </head>
 <body>
-<div class="bg-math"></div>
-
-<div class="app">
-
-<header class="topbar">
-  <div class="brand">
-    <div class="logo">SR</div>
-    <div>
-      <h1>SezR Focus</h1>
-      <p>Öğrenci çalışma koçu</p>
-    </div>
+  <div class="math-bg" aria-hidden="true">
+    <span>∫</span><span>π</span><span>lim</span><span>Σ</span><span>x²</span><span>f(x)</span><span>√</span><span>∞</span>
   </div>
 
-  <div class="top-actions">
-    <button>🔔</button>
-    <button>📊</button>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">SR</div>
+        <div>
+          <h1>SezR Focus</h1>
+          <p>Öğrenci çalışma koçu</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" onclick="showToast('Bildirimler yakında eklenecek')">🔔</button>
+        <button type="button" onclick="scrollToTasks()">📊</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="hero card">
+        <div class="hero-text">
+          <div class="badge">🎯 Bugünkü Hedefin</div>
+          <h2>Bugünkü ilk <span>görevini ekle.</span></h2>
+          <p>Küçük ve net bir görev yaz. Sonra seçtiğin odak moduyla çalışmaya başla.</p>
+          <div class="hero-actions">
+            <button class="primary-btn" onclick="focusTaskInput()">＋ Görev Ekle</button>
+            <button class="ghost-btn" onclick="startFocus()">▶ Odak Başlat</button>
+          </div>
+        </div>
+
+        <div class="timer-circle">
+          <div class="timer-ring"></div>
+          <div class="timer-content">
+            <strong id="timerText">25:00</strong>
+            <small id="timerLabel">Standart mod</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats">
+        <div class="stat card">
+          <div class="icon blue">◷</div>
+          <div>
+            <strong id="statMinutes">0 dk</strong>
+            <p>Bugünkü süre</p>
+          </div>
+        </div>
+
+        <div class="stat card">
+          <div class="icon green">↗</div>
+          <div>
+            <strong id="statRate">0%</strong>
+            <p>Görev oranı</p>
+          </div>
+        </div>
+
+        <div class="stat card">
+          <div class="icon orange">🔥</div>
+          <div>
+            <strong id="statStreak">0</strong>
+            <p>Günlük seri</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="daily card">
+        <button type="button" class="daily-row" onclick="focusTaskInput()">
+          <div class="daily-icon sun">☀</div>
+          <div>
+            <h3>Günün Başlangıcı</h3>
+            <p>Bugün için 1 küçük görev ekle. Başlamak en önemli adım.</p>
+          </div>
+          <span>›</span>
+        </button>
+
+        <div class="line"></div>
+
+        <button type="button" class="daily-row" onclick="quickTask()">
+          <div class="daily-icon moon">☾</div>
+          <div>
+            <h3>Gün Sonu Kontrolü</h3>
+            <p>Bugünkü çalışmanı tamamla. Quick Start ile bitiriş yapabilirsin.</p>
+          </div>
+          <span>›</span>
+        </button>
+      </section>
+
+      <section class="focus card">
+        <div class="section-head">
+          <div>
+            <h2>Focus Modu</h2>
+            <p>Çalışma şekline göre hazır mod seç.</p>
+          </div>
+          <span id="selectedModePill">Standart · 25 dk</span>
+        </div>
+
+        <div class="modes">
+          <button class="mode active" data-name="Standart" data-min="25" onclick="selectMode(this)">
+            <b>🎯</b>
+            <strong>Standart</strong>
+            <small>25 dk dengeli çalışma</small>
+          </button>
+
+          <button class="mode" data-name="Quick Start" data-min="10" onclick="selectMode(this)">
+            <b>⚡</b>
+            <strong>Quick Start</strong>
+            <small>10 dk hızlı başlangıç</small>
+          </button>
+
+          <button class="mode" data-name="Deep Focus" data-min="60" onclick="selectMode(this)">
+            <b>🧠</b>
+            <strong>Deep Focus</strong>
+            <small>60 dk derin çalışma</small>
+          </button>
+
+          <button class="mode" data-name="Deneme" data-min="120" onclick="selectMode(this)">
+            <b>📝</b>
+            <strong>Deneme</strong>
+            <small>120 dk sınav disiplini</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="room card">
+        <div>
+          <small>FOCUS ROOM</small>
+          <h2>ODAKLAN. <span>BAŞLA.</span></h2>
+          <p>Tek ekran, tek plan, tek başlatma akışı. Sayaç ve görev takibi birlikte çalışır.</p>
+        </div>
+        <div class="room-visual">
+          <div class="desk"></div>
+          <div class="lamp"></div>
+          <div class="window"></div>
+        </div>
+      </section>
+
+      <section id="tasksSection" class="tasks card">
+        <div class="task-head">
+          <h2>📋 Bugünkü Görevlerin</h2>
+          <span id="taskCounter">0 / 0</span>
+        </div>
+
+        <div class="task-add">
+          <input id="taskInput" placeholder="Örn. Matematik: Türev 30 soru" />
+          <button onclick="addTask()">Ekle</button>
+        </div>
+
+        <div class="selectors">
+          <label>
+            Kategori
+            <select id="category">
+              <option>Soru</option>
+              <option>Konu Tekrarı</option>
+              <option>Deneme</option>
+              <option>Video Ders</option>
+            </select>
+          </label>
+
+          <label>
+            Zorluk
+            <select id="level">
+              <option>Normal</option>
+              <option>Kolay</option>
+              <option>Zor</option>
+            </select>
+          </label>
+
+          <label>
+            Mod
+            <select id="taskMode">
+              <option>Standart</option>
+              <option>Quick Start</option>
+              <option>Deep Focus</option>
+              <option>Deneme</option>
+            </select>
+          </label>
+        </div>
+
+        <ul id="taskList"></ul>
+
+        <div class="empty-state" id="emptyState">＋ Henüz görev eklenmedi.</div>
+
+        <div class="task-actions">
+          <button onclick="clearCompleted()">✓ Tamamlananları Temizle</button>
+          <button class="danger" onclick="clearAll()">🗑 Tümünü Temizle</button>
+        </div>
+
+        <div class="progress-bar">
+          <div id="progressFill"></div>
+        </div>
+
+        <p class="progress-text" id="progressText">Görev ilerlemesi: %0 (0/0)</p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})">⌂<span>Ana Sayfa</span></button>
+      <button onclick="scrollToTasks()">▥<span>İstatistik</span></button>
+      <button onclick="startFocus()">▶<span>Odak</span></button>
+      <button onclick="showToast('Profil bölümü yakında eklenecek')">👤<span>Profil</span></button>
+    </nav>
+
+    <button class="floating" onclick="resetTimer()">⚙</button>
+    <div id="toast"></div>
   </div>
-</header>
-
-<main class="content">
-
-<section class="hero card">
-  <div class="hero-text">
-    <div class="badge">🎯 Bugünkü Hedefin</div>
-
-    <h2>Bugünkü ilk <span>görevini ekle.</span></h2>
-
-    <p>
-      Küçük ve net bir görev yaz.<br>
-      Sonra 25 dakikalık odak seansına başla.
-    </p>
-
-    <button class="primary-btn" onclick="focusTaskInput()">＋ Görev Ekle</button>
-  </div>
-
-  <div class="timer-circle">
-    <div>
-      <strong id="todayMinutes">0 dk</strong>
-      <small>Bugünkü süre</small>
-    </div>
-  </div>
-</section>
-
-<section class="stats">
-  <div class="stat card">
-    <div class="icon blue">◷</div>
-    <div>
-      <strong id="statMinutes">0 dk</strong>
-      <p>Bugünkü süre</p>
-    </div>
-  </div>
-
-  <div class="stat card">
-    <div class="icon green">↗</div>
-    <div>
-      <strong id="statRate">0%</strong>
-      <p>Görev oranı</p>
-    </div>
-  </div>
-
-  <div class="stat card">
-    <div class="icon orange">🔥</div>
-    <div>
-      <strong id="statStreak">0</strong>
-      <p>Günlük seri</p>
-    </div>
-  </div>
-</section>
-
-<section class="focus card">
-  <h2>Focus Modu</h2>
-  <p>Çalışma şekline göre hazır mod seç.</p>
-
-  <div class="modes">
-    <button class="mode active" onclick="selectMode(this)">
-      <b>🎯</b>
-      <strong>Standart</strong>
-      <small>25 dk dengeli çalışma</small>
-    </button>
-
-    <button class="mode" onclick="selectMode(this)">
-      <b>⚡</b>
-      <strong>Quick Start</strong>
-      <small>10 dk hızlı başlangıç</small>
-    </button>
-
-    <button class="mode" onclick="selectMode(this)">
-      <b>🧠</b>
-      <strong>Deep Focus</strong>
-      <small>60 dk derin çalışma</small>
-    </button>
-
-    <button class="mode" onclick="selectMode(this)">
-      <b>📝</b>
-      <strong>Deneme</strong>
-      <small>120 dk sınav disiplini</small>
-    </button>
-  </div>
-</section>
-
-<section class="room card">
-  <small>FOCUS ROOM</small>
-
-  <h2>ODAKLAN. <span>BAŞLA.</span></h2>
-
-  <p>
-    Tek ekran, tek plan, tek başlatma akışı.
-    Sayaç ve müzik birlikte çalışır.
-  </p>
-</section>
-
-<section class="tasks card">
-
-  <div class="task-head">
-    <h2>📋 Bugünkü Görevlerin</h2>
-    <span id="taskCounter">0 / 0</span>
-  </div>
-
-  <div class="task-add">
-    <input id="taskInput" placeholder="Örn. Matematik: Türev 30 soru">
-    <button onclick="addTask()">Ekle</button>
-  </div>
-
-  <ul id="taskList"></ul>
-
-  <p class="progress-text" id="progressText">
-    Görev ilerlemesi: %0 (0/0)
-  </p>
-
-</section>
-
-</main>
-
-<nav class="bottom-nav">
-  <button class="active">⌂<span>Ana Sayfa</span></button>
-  <button>▥<span>İstatistik</span></button>
-  <button>▶<span>Odak</span></button>
-  <button>👤<span>Profil</span></button>
-</nav>
-
-</div>
 </body>
 </html>
