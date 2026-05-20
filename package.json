@@ -1,17 +1,17 @@
 {
-  "name": "sezr-focus-standalone",
+  "name": "sezr-focus",
   "version": "1.0.0",
-  "private": true,
+  "description": "SezR Focus öğrenci çalışma koçu",
+  "main": "index.js",
   "scripts": {
-    "android:debug": "npx cap add android || true && npx cap sync android && cd android && ./gradlew assembleDebug",
-    "android:aab": "npx cap add android || true && npx cap sync android && cd android && ./gradlew bundleRelease"
+    "build": "echo \"Static app ready\"",
+    "cap:add": "npx cap add android",
+    "cap:sync": "npx cap sync android"
   },
   "dependencies": {
-    "@capacitor/android": "^6.1.2",
-    "@capacitor/core": "^6.1.2",
-    "@capacitor/ios": "^6.1.2"
+    "@capacitor/android": "latest",
+    "@capacitor/cli": "latest",
+    "@capacitor/core": "latest"
   },
-  "devDependencies": {
-    "@capacitor/cli": "^6.1.2"
-  }
+  "devDependencies": {}
 }

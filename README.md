@@ -1,38 +1,21 @@
-# SezR Focus Native App
+# SezR Focus
 
-Bu paket, SezR Focus'u Android APK/AAB ve iOS kaynak yapısına dönüştürmek için hazırlandı.
+Premium dark temalı öğrenci çalışma koçu uygulaması.
 
-## Android APK üretme
+## GitHub üzerinden APK üretme
 
 1. GitHub'da yeni repo aç.
-2. Bu ZIP içindeki tüm dosyaları repo köküne yükle.
-3. GitHub > Actions > `Build SezR Focus Android`
-4. `Run workflow` de.
-5. Build bitince Artifacts bölümünden:
-   - `SezR-Focus-debug-apk`
-   - `SezR-Focus-release-aab-unsigned`
-   dosyalarını indir.
+2. Bu ZIP içindeki tüm dosyaları repoya yükle.
+3. Repo içinde `Actions` sekmesine gir.
+4. `Build Android APK` workflow'unu aç.
+5. `Run workflow` butonuna bas.
+6. Build bitince alttaki `Artifacts` bölümünden APK dosyasını indir.
 
-## Google Play
+## Ana klasörler
 
-Google Play için AAB kullanılır. Test için debug APK telefona kurulabilir. Play Console'a yükleme için release AAB imzalanmalıdır.
-
-## iOS / App Store
-
-iOS için Mac + Xcode gerekir:
-
-```bash
-npm install
-npx cap add ios
-npx cap sync ios
-```
-
-Sonra Xcode ile `ios/App/App.xcworkspace` açılır.
-
-## Paket bilgileri
-
-Android package / iOS bundle id:
-`com.sezrmatematik.focus`
-
-Uygulama adı:
-`SezR Focus`
+- `www/index.html`
+- `www/css/style.css`
+- `www/js/app.js`
+- `.github/workflows/build-apk.yml`
+- `package.json`
+- `capacitor.config.ts`
