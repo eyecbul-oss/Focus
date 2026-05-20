@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SezR Focus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
@@ -41,29 +41,93 @@
   </section>
 
   <div id="appPage" class="page hidden">
-    <header class="topbar">
-      <div class="logo">Sez<span>R</span> Focus</div>
-      <div id="profileChip" class="profile-chip">Hesap</div>
-      <nav>
-        <a href="index.html">Ana Sayfa</a>
-        <a href="dersler.html">Derslerim</a>
-        <a href="youtube.html">YouTube</a>
-        <a href="pdf.html">PDF</a>
-        <a class="active" href="focus.html">Focus</a>
-        <a href="iletisim.html">Kayıt</a>
-      </nav>
+    <header class="app-shell-top">
+      <div class="app-brand-block">
+        <div class="app-logo-mark">S<span>R</span></div>
+        <div>
+          <div class="app-title">SezR Focus</div>
+          <div id="appSubtitle" class="app-subtitle">Öğrenci çalışma koçu</div>
+        </div>
+      </div>
+      <button id="appSettingsTopBtn" class="app-top-btn">⚙</button>
     </header>
-<main class="hero">
+<section id="coach" class="coach-panel">
+      <div class="coach-main">
+        <div class="coach-badge">Öğrenci Koçu</div>
+        <h2 id="coachTitle">Bugünkü planını hazırlayalım.</h2>
+        <p id="coachMessage">Görev ekle, hedefini seç ve ilk odak seansına başla.</p>
+      </div>
+      <div class="coach-mini">
+        <div><b id="coachFocusTarget">0 dk</b><span>Bugünkü süre</span></div>
+        <div><b id="coachTaskRate">0%</b><span>Görev oranı</span></div>
+        <div><b id="coachExamDays">-</b><span>Sınav</span></div>
+      </div>
+    </section>
+
+
+    
+    <section class="focus-modes-panel">
+      <div class="focus-modes-head">
+        <div>
+          <h2>Focus Modu</h2>
+          <p>Çalışma şekline göre hazır mod seç.</p>
+        </div>
+        <div id="activeFocusMode" class="active-focus-mode">Standart</div>
+      </div>
+      <div class="focus-mode-grid">
+        <button class="focus-mode-card active" data-focus-mode="standard">
+          <b>Standart</b><span>25 dk dengeli çalışma</span>
+        </button>
+        <button class="focus-mode-card" data-focus-mode="quick">
+          <b>Quick Start</b><span>10 dk hızlı başlangıç</span>
+        </button>
+        <button class="focus-mode-card" data-focus-mode="deep">
+          <b>Deep Focus</b><span>60 dk derin çalışma</span>
+        </button>
+        <button class="focus-mode-card" data-focus-mode="exam">
+          <b>Deneme</b><span>120 dk sınav disiplini</span>
+        </button>
+      </div>
+    </section>
+
+
+    
+    <section id="installHint" class="install-hint hidden">
+      <div>
+        <b>Uygulama gibi kullan</b>
+        <span>Tarayıcı menüsünden “Ana ekrana ekle” ile SezR Focus’u uygulama gibi açabilirsin.</span>
+      </div>
+      <button id="closeInstallHint">Tamam</button>
+    </section>
+
+
+    <main class="hero">
       <section class="intro">
         <div class="badge">FOCUS ROOM</div>
         <h1>Odaklan.<br><span>Başla.</span></h1>
         <p>Tek ekran, tek plan, tek başlatma akışı. Sayaç ve müzik birlikte çalışır.</p>
 
-        <div class="plan-card">
+        <div id="tasks" class="plan-card">
           <label for="taskInput">Bugünkü görevlerin</label>
           <div class="plan-input-row">
             <input id="taskInput" placeholder="Örn. Matematik: Türev 30 soru">
             <button id="addTaskBtn">Ekle</button>
+          </div>
+          <div class="task-meta-row">
+            <select id="taskTypeSelect">
+              <option value="Soru">Soru</option>
+              <option value="Konu">Konu tekrarı</option>
+              <option value="Deneme">Deneme</option>
+              <option value="Yanlış">Yanlış analizi</option>
+              <option value="Video">Video</option>
+              <option value="Paragraf">Paragraf</option>
+              <option value="Ezber">Ezber</option>
+            </select>
+            <select id="taskPrioritySelect">
+              <option value="normal">Normal</option>
+              <option value="critical">Kritik</option>
+              <option value="light">Hafif</option>
+            </select>
           </div>
           <div id="taskListMain" class="daily-task-list"></div>
           <div class="task-actions">
@@ -77,7 +141,7 @@
         </div>
       </section>
 
-      <section class="focus-card">
+      <section id="timer" class="focus-card">
         <div class="timer-ring" id="timerRing">
           <div class="timer-inner">
             <div id="timerText">25:00</div>
@@ -149,7 +213,7 @@
       <div class="stat"><b id="taskCompletion">0%</b><span>Görev tamamlama</span></div>
     </section>
 
-    <section id="examCountdownPanel" class="exam-panel">
+    <section id="exam" class="exam-panel">
       <div class="exam-head">
         <div>
           <h2>Sınav Sayacı</h2>
@@ -193,6 +257,20 @@
       </div>
     </section>
 
+    
+    <section class="native-ready-panel">
+      <div>
+        <h2>Uygulama Durumu</h2>
+        <p id="nativeStatusText">Offline kayıt ve uygulama modu hazır.</p>
+      </div>
+      <div class="native-status-grid">
+        <div><b id="offlineStatus">Aktif</b><span>Offline kayıt</span></div>
+        <div><b id="notificationStatus">Hazır</b><span>Bildirim altyapısı</span></div>
+        <div><b id="streakStatus">0 gün</b><span>Çalışma serisi</span></div>
+      </div>
+    </section>
+
+
     <section class="weekly-panel">
       <div class="weekly-head">
         <h2>Haftalık Özet</h2>
@@ -211,6 +289,16 @@
         <div><b id="bestDay">0 dk</b><span>En iyi gün</span></div>
       </div>
     </section>
+
+    
+    <section class="daily-review-panel">
+      <div>
+        <h2>Günlük Değerlendirme</h2>
+        <p id="dailyReviewText">Gün sonunda burada kısa özet oluşur.</p>
+      </div>
+      <button id="copyReviewBtn">Özeti Kopyala</button>
+    </section>
+
 
     <section class="bottom-grid">
       <div class="panel">
@@ -242,7 +330,7 @@
 
       <div class="panel">
         <h2>Son </h2>
-        <div id="sessionList" class="list"></div>
+        
       </div>
     </section>
 </div>
@@ -278,8 +366,11 @@
       <span>Kayıtların hesabına bağlı.</span>
     </div>
 
+    <div id="appHealthStatus" class="app-health-status">Sistem hazır</div>
     <div id="cloudSyncStatus" class="cloud-sync-status">Bulut durumu kontrol ediliyor.</div>
     <button id="compactModeBtn" class="logout-clean">Sade Görünüm</button>
+    <button id="notificationBtn" class="logout-clean">Bildirim İznini Aç</button>
+    <button id="syncTestBtn" class="logout-clean">Senkronu Test Et</button>
     <button id="logoutBtn" class="logout-clean">Çıkış Yap</button>
   </aside>
 
