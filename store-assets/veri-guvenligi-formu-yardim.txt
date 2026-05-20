@@ -1,0 +1,14 @@
+Google Play Veri Güvenliği Formu taslağı:
+
+Toplanan veriler:
+- E-posta adresi
+- Kullanıcı görevleri ve notları
+- Çalışma süreleri ve istatistikler
+
+Kullanım amacı:
+- Uygulama işlevselliği
+- Hesaplar arası senkronizasyon
+- Kişiselleştirilmiş çalışma önerileri
+
+Reklam:
+- Reklam yoksa Play Console'da reklam yok seçilebilir.

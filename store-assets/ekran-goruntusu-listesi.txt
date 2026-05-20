@@ -1,0 +1,16 @@
+Google Play ekran görüntüsü önerileri:
+
+1. Ana Koç Paneli
+Başlık: Bugünkü çalışmanı planla
+
+2. Focus Modları
+Başlık: Çalışma tarzını seç
+
+3. Tam Ekran Sayaç
+Başlık: Dikkatini sadece çalışmaya ver
+
+4. Sınav Geri Sayımı
+Başlık: Sınava kalan süreyi takip et
+
+5. Günlük Görevler
+Başlık: Küçük görevlerle ilerle
