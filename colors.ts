@@ -1,33 +1,19 @@
-// 🎨 Renk Paleti - Focus Uygulaması
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
+import { FocusSnapshot } from '../store/focusStore';
 
-export const COLORS = {
-  // Ana Renkler
-  primary: '#00D9FF', // Neon Cyan
-  secondary: '#FF006E', // Hot Pink
-  accent: '#8338EC', // Purple
-  
-  // Arkaplanlar
-  bg: '#020617', // Very Dark Navy
-  bgSecondary: '#0F1629', // Dark Navy
-  bgTertiary: '#1A1F3A', // Slightly Lighter Navy
-  
-  // Metin Renkleri
-  text: '#FFFFFF', // Beyaz
-  textSecondary: '#E0E0E0', // Açık Gri
-  muted: '#8B92B5', // Soft Gri
-  
-  // Borderlar ve Dividers
-  border: 'rgba(255, 255, 255, 0.12)', // Transparent White
-  borderLight: 'rgba(255, 255, 255, 0.06)',
-  
-  // Durum Renkleri
-  success: '#10B981', // Yeşil
-  error: '#EF4444', // Kırmızı
-  warning: '#F59E0B', // Turuncu
-  info: '#3B82F6', // Mavi
-  
-  // Priority Renkleri
-  critical: '#FF1744', // Kırmızı
-  normalPriority: '#FFA726', // Turuncu
-  light: '#66BB6A', // Yeşil
-};
+export async function saveCloudData(uid: string, data: FocusSnapshot) {
+  await setDoc(doc(db, 'focusUsers', uid), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+}
+
+export async function loadCloudData(uid: string): Promise<FocusSnapshot | null> {
+  const snap = await getDoc(doc(db, 'focusUsers', uid));
+  return snap.exists() ? (snap.data() as FocusSnapshot) : null;
+}
+
+export function mergeLatest(local: FocusSnapshot, cloud: FocusSnapshot | null): FocusSnapshot {
+  if (!cloud) return local;
+  const localTime = new Date(local.updatedAt || 0).getTime();
+  const cloudTime = new Date(cloud.updatedAt || 0).getTime();
+  return cloudTime > localTime ? cloud : local;
+}

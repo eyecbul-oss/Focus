@@ -1,16 +1,29 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../../theme/colors';
+import { create } from 'zustand';
 
-export default function NeonButton({title,onPress,variant='primary',style}:{title:string;onPress?:()=>void;variant?:'primary'|'dark'|'danger';style?:ViewStyle}) {
-  const colors = variant==='primary' ? [COLORS.green,'#16A34A'] : variant==='danger' ? [COLORS.orange,'#EA580C'] : ['rgba(15,23,42,.95)','rgba(2,6,23,.92)'];
-  return <Pressable onPress={onPress} style={({pressed})=>[styles.press,pressed&&styles.pressed,style]}>
-    <LinearGradient colors={colors} style={styles.btn}><Text style={styles.text}>{title}</Text></LinearGradient>
-  </Pressable>;
-}
-const styles=StyleSheet.create({
-  press:{borderRadius:20,overflow:'hidden'}, pressed:{transform:[{scale:.98}]},
-  btn:{minHeight:54,borderRadius:20,alignItems:'center',justifyContent:'center',paddingHorizontal:16,borderWidth:1,borderColor:'rgba(255,255,255,.12)'},
-  text:{color:COLORS.text,fontWeight:'900',fontSize:15}
-});
+export type SoundTrack = 'rain' | 'lofi' | 'piano' | 'fire' | 'silent';
+
+type SettingsState = {
+  soundTrack: SoundTrack;
+  volume: number;
+  fullscreenFocus: boolean;
+  notifications: boolean;
+  vibration: boolean;
+  setSoundTrack: (track: SoundTrack) => void;
+  setVolume: (volume: number) => void;
+  setFullscreenFocus: (value: boolean) => void;
+  setNotifications: (value: boolean) => void;
+  setVibration: (value: boolean) => void;
+};
+
+export const useSettingsStore = create<SettingsState>((set) => ({
+  soundTrack: 'rain',
+  volume: 60,
+  fullscreenFocus: false,
+  notifications: false,
+  vibration: true,
+  setSoundTrack: (soundTrack) => set({ soundTrack }),
+  setVolume: (volume) => set({ volume }),
+  setFullscreenFocus: (fullscreenFocus) => set({ fullscreenFocus }),
+  setNotifications: (notifications) => set({ notifications }),
+  setVibration: (vibration) => set({ vibration }),
+}));

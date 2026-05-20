@@ -8,9 +8,6 @@ on:
 jobs:
   android:
     runs-on: ubuntu-latest
-    env:
-      CI: 1
-      EXPO_NO_TELEMETRY: 1
 
     steps:
       - name: Checkout
@@ -30,39 +27,30 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Clean generated folders
-        run: |
-          rm -rf android ios node_modules
-          rm -f package-lock.json
-
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Align Expo versions
-        run: npx expo install --fix
+        run: npm install
 
       - name: Type check
         run: npm run typecheck
         continue-on-error: true
 
       - name: Expo prebuild Android
-        run: npx expo prebuild --platform android --clean
+        run: npx expo prebuild --platform android --non-interactive
 
       - name: Build debug APK
-        run: cd android && ./gradlew assembleDebug --stacktrace
+        run: cd android && ./gradlew assembleDebug
 
-      - name: Build release AAB
+      - name: Build release AAB unsigned
         run: cd android && ./gradlew bundleRelease
-        continue-on-error: true
 
-      - name: Upload debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: SezR-Focus-debug-apk
+          name: SezR-Focus-Premium-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
 
-      - name: Upload release AAB
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: SezR-Focus-release-aab
+          name: SezR-Focus-Premium-release-aab
           path: android/app/build/outputs/bundle/release/*.aab

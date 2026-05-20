@@ -1,11 +1,23 @@
-import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { create } from 'zustand';
 
-export default function GlassCard({children,style}:{children:React.ReactNode;style?:ViewStyle}) {
-  return <View style={[styles.card,style]}>{children}</View>;
-}
-const styles = StyleSheet.create({
-  card:{backgroundColor:COLORS.card,borderWidth:1,borderColor:COLORS.border,borderRadius:30,padding:18,
-  shadowColor:'#000',shadowOffset:{width:0,height:18},shadowOpacity:.28,shadowRadius:28,elevation:10}
-});
+type AuthState = {
+  uid: string | null;
+  email: string | null;
+  guest: boolean;
+  cloudStatus: string;
+  login: (email: string, uid?: string) => void;
+  logout: () => void;
+  continueGuest: () => void;
+  setCloudStatus: (status: string) => void;
+};
+
+export const useAuthStore = create<AuthState>((set) => ({
+  uid: null,
+  email: null,
+  guest: false,
+  cloudStatus: 'Giriş bekleniyor',
+  login: (email, uid) => set({ email, uid: uid || email.replace(/[^a-zA-Z0-9]/g, '_'), guest: false, cloudStatus: 'Bulut senkron aktif' }),
+  logout: () => set({ uid: null, email: null, guest: false, cloudStatus: 'Çıkış yapıldı' }),
+  continueGuest: () => set({ uid: null, email: null, guest: true, cloudStatus: 'Misafir mod' }),
+  setCloudStatus: (cloudStatus) => set({ cloudStatus }),
+}));
