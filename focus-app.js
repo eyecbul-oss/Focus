@@ -314,7 +314,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!input) return;
     const text = input.value.trim();
     if(!text) return;
-    getTasks().push({text,done:false,createdAt:new Date().toISOString()});
+
+    const type = $("taskTypeSelect") ? $("taskTypeSelect").value : "Soru";
+    const priority = $("taskPrioritySelect") ? $("taskPrioritySelect").value : "normal";
+
+    getTasks().push({
+      text,
+      type,
+      priority,
+      done:false,
+      createdAt:new Date().toISOString(),
+      carryCount:0
+    });
+
     input.value = "";
     queueSave();
     render();
@@ -370,6 +382,12 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   }
 
+  function priorityWeight(p){
+    if(p === "critical") return 0;
+    if(p === "normal") return 1;
+    return 2;
+  }
+
   function renderDailyTasks(){
     const box = $("taskListMain");
     if(!box) return;
@@ -378,11 +396,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if(tasks.length === 0){
       box.innerHTML = '<div class="daily-task"><div class="daily-task-main"><span class="check">+</span><span>Henüz görev eklenmedi.</span></div></div>';
     }else{
-      tasks.forEach((task,index)=>{
+      tasks
+        .map((task,index)=>({task,index}))
+        .sort((a,b)=>priorityWeight(a.task.priority)-priorityWeight(b.task.priority))
+        .forEach(({task,index})=>{
         const item = document.createElement("div");
         item.className = "daily-task " + (task.done ? "done" : "");
-        item.innerHTML = '<div class="daily-task-main"><span class="check">'+(task.done ? "✓" : "")+'</span><span></span></div><button class="daily-task-delete">Sil</button>';
-        item.querySelector(".daily-task-main span:last-child").textContent = task.text;
+        item.innerHTML = '<div class="daily-task-main"><span class="check">'+(task.done ? "✓" : "")+'</span><span class="task-content"><span class="task-title"></span><span class="task-meta"><span class="task-pill type-pill"></span><span class="task-pill priority-pill"></span></span></span></div><button class="daily-task-delete">Sil</button>';
+        item.querySelector(".task-title").textContent = task.text;
+        item.querySelector(".type-pill").textContent = task.type || "Görev";
+        const pr = task.priority || "normal";
+        const prText = pr === "critical" ? "Kritik" : pr === "light" ? "Hafif" : "Normal";
+        const prEl = item.querySelector(".priority-pill");
+        prEl.textContent = prText;
+        prEl.classList.add(pr);
         item.querySelector(".daily-task-main").onclick = () => toggleDailyTask(index);
         item.querySelector(".daily-task-delete").onclick = e => { e.stopPropagation(); deleteDailyTask(index); };
         box.appendChild(item);
@@ -407,10 +434,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const date = typeof n === "string" ? "" : (n.date + " • " + n.time);
       const div = document.createElement("div");
       div.className = "list-item";
-      div.innerHTML = '<span><span class="note-text"></span><span class="note-date"></span></span><button>Sil</button>';
+      div.innerHTML = '<span><span class="note-text"></span><span class="note-date"></span></span><button class="note-to-task">Görev yap</button><button>Sil</button>';
       div.querySelector(".note-text").textContent = text;
       div.querySelector(".note-date").textContent = date;
-      div.querySelector("button").onclick = () => { data.notes.splice(i,1); queueSave(); render(); };
+      const buttons = div.querySelectorAll("button");
+      if(buttons[0]) buttons[0].onclick = () => noteToTask(i);
+      if(buttons[1]) buttons[1].onclick = () => { data.notes.splice(i,1); queueSave(); render(); };
       box.appendChild(div);
     });
   }
@@ -426,8 +455,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function advice(){
     const min = Math.floor(day().seconds/60);
     const ts = taskStats();
-    if(ts.total === 0 && min === 0) return "Bir görev ekleyip odak seansına başla.";
-    if(ts.total > 0 && ts.done === ts.total) return "Bugünkü görevler tamamlandı.";
+    if(ts.total === 0 && min === 0) return "İlk görevini ekle.";
+    if(ts.total > 0 && ts.done === ts.total) return "Görevler tamamlandı.";
     if(ts.total > 0 && min === 0) return "Görevlerin hazır. İlk göreve odaklan.";
     if(min < Number(data.dailyTarget || 60)) return "Bir seans daha ekleyebilirsin.";
     return "Günlük hedef tamamlandı.";
@@ -882,6 +911,103 @@ document.addEventListener("DOMContentLoaded", () => {
     catch(e){console.warn(e);setCloudStatus("Senkron testi başarısız. Firestore Rules kontrol edilmeli.","warn");}
   }
 
+  
+  function examDaysLeft(){
+    if(!data.exam || !data.exam.date) return null;
+    const diff = new Date(data.exam.date + "T10:00:00").getTime() - Date.now();
+    if(diff <= 0) return 0;
+    return Math.floor(diff / (1000*60*60*24));
+  }
+
+  function coachMessage(){
+    const d = day();
+    const min = Math.floor((d.seconds || 0)/60);
+    const ts = taskStats();
+    const days = examDaysLeft();
+
+    if(ts.total === 0) return {
+      title:"Bugünkü ilk görevini ekle.",
+      msg:"Küçük ve net bir görev yaz. Sonra 25 dakikalık odak seansına başla."
+    };
+
+    if(ts.done === ts.total) return {
+      title:"Görevler tamamlandı.",
+      msg:"Yeni yüklenmek yerine kısa tekrar veya yanlış analizi daha verimli olabilir."
+    };
+
+    if(min === 0) return {
+      title:"Görevlerin hazır.",
+      msg:"İlk görevi seç ve kısa bir odak seansı başlat."
+    };
+
+    if(days !== null && days <= 30) return {
+      title:"Sınav temposu önemli.",
+      msg:"Yeni konu yerine deneme analizi ve eksik kapatma daha değerli olabilir."
+    };
+
+    if(min < Number(data.dailyTarget || 60)) return {
+      title:"Ritmi koruyorsun.",
+      msg:"Hedefe yaklaşmak için bir kısa seans daha yeterli olabilir."
+    };
+
+    return {
+      title:"Günlük süre hedefi tamamlandı.",
+      msg:"Şimdi notlarını gözden geçir veya yarın için küçük bir görev bırak."
+    };
+  }
+
+  function renderCoachPanel(){
+    const c = coachMessage();
+    const d = day();
+    const min = Math.floor((d.seconds || 0)/60);
+    const ts = taskStats();
+    const days = examDaysLeft();
+
+    if($("coachTitle")) $("coachTitle").textContent = c.title;
+    if($("coachMessage")) $("coachMessage").textContent = c.msg;
+    if($("coachFocusTarget")) $("coachFocusTarget").textContent = min + " dk";
+    if($("coachTaskRate")) $("coachTaskRate").textContent = ts.pct + "%";
+    if($("coachExamDays")) $("coachExamDays").textContent = days === null ? "-" : days + "g";
+  }
+
+  function dailyReviewText(){
+    const d = day();
+    const min = Math.floor((d.seconds || 0)/60);
+    const ts = taskStats();
+    const completed = ts.done + "/" + ts.total;
+    if(ts.total === 0 && min === 0) return "Bugün henüz veri yok. İlk görev ve ilk seansla başla.";
+    return "Bugün " + min + " dk çalıştın. Görev durumu: " + completed + ". Focus puanı: " + score() + "%.";
+  }
+
+  function renderDailyReview(){
+    if($("dailyReviewText")) $("dailyReviewText").textContent = dailyReviewText();
+  }
+
+  function copyDailyReview(){
+    const text = "SezR Focus Günlük Değerlendirme\\n" + dailyReviewText();
+    if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>alert("Özet kopyalandı."));
+    else prompt("Özeti kopyala:", text);
+  }
+
+  function noteToTask(index){
+    data.notes = Array.isArray(data.notes) ? data.notes : [];
+    const n = data.notes[index];
+    if(!n) return;
+    const text = typeof n === "string" ? n : n.text;
+    if(!text || !text.trim()) return;
+
+    getTasks().push({
+      text:"Nottan görev: " + text.trim(),
+      type:"Yanlış",
+      priority:"normal",
+      done:false,
+      createdAt:new Date().toISOString()
+    });
+    queueSave();
+    render();
+  }
+
+
   function render(){
     const d = day();
     const min = Math.floor((d.seconds || 0)/60);
@@ -933,6 +1059,8 @@ document.addEventListener("DOMContentLoaded", () => {
     renderWeekly();
     renderRhythm();
     renderExamCountdown();
+    renderCoachPanel();
+    renderDailyReview();
     applyCompactMode();
   }
 
@@ -981,6 +1109,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if($("clearDoneTasksBtn")) $("clearDoneTasksBtn").onclick = clearDoneTasks;
   if($("clearTasksBtn")) $("clearTasksBtn").onclick = clearDailyTasks;
   if($("addNoteBtn")) $("addNoteBtn").onclick = addNote;
+  if($("copyReviewBtn")) $("copyReviewBtn").onclick = copyDailyReview;
   if($("addExamTaskBtn")) $("addExamTaskBtn").onclick = addExamTask;
 
   document.querySelectorAll(".mode").forEach(btn=>{

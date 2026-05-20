@@ -53,7 +53,22 @@
         <a href="iletisim.html">Kayıt</a>
       </nav>
     </header>
-<main class="hero">
+
+    <section class="coach-panel">
+      <div class="coach-main">
+        <div class="coach-badge">Öğrenci Koçu</div>
+        <h2 id="coachTitle">Bugünkü planını hazırlayalım.</h2>
+        <p id="coachMessage">Görev ekle, hedefini seç ve ilk odak seansına başla.</p>
+      </div>
+      <div class="coach-mini">
+        <div><b id="coachFocusTarget">0 dk</b><span>Bugünkü süre</span></div>
+        <div><b id="coachTaskRate">0%</b><span>Görev oranı</span></div>
+        <div><b id="coachExamDays">-</b><span>Sınav</span></div>
+      </div>
+    </section>
+
+
+    <main class="hero">
       <section class="intro">
         <div class="badge">FOCUS ROOM</div>
         <h1>Odaklan.<br><span>Başla.</span></h1>
@@ -64,6 +79,22 @@
           <div class="plan-input-row">
             <input id="taskInput" placeholder="Örn. Matematik: Türev 30 soru">
             <button id="addTaskBtn">Ekle</button>
+          </div>
+          <div class="task-meta-row">
+            <select id="taskTypeSelect">
+              <option value="Soru">Soru</option>
+              <option value="Konu">Konu tekrarı</option>
+              <option value="Deneme">Deneme</option>
+              <option value="Yanlış">Yanlış analizi</option>
+              <option value="Video">Video</option>
+              <option value="Paragraf">Paragraf</option>
+              <option value="Ezber">Ezber</option>
+            </select>
+            <select id="taskPrioritySelect">
+              <option value="normal">Normal</option>
+              <option value="critical">Kritik</option>
+              <option value="light">Hafif</option>
+            </select>
           </div>
           <div id="taskListMain" class="daily-task-list"></div>
           <div class="task-actions">
@@ -211,6 +242,16 @@
         <div><b id="bestDay">0 dk</b><span>En iyi gün</span></div>
       </div>
     </section>
+
+    
+    <section class="daily-review-panel">
+      <div>
+        <h2>Günlük Değerlendirme</h2>
+        <p id="dailyReviewText">Gün sonunda burada kısa özet oluşur.</p>
+      </div>
+      <button id="copyReviewBtn">Özeti Kopyala</button>
+    </section>
+
 
     <section class="bottom-grid">
       <div class="panel">

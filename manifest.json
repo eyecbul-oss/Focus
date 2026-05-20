@@ -1,7 +1,7 @@
 {
   "name": "SezR Focus",
   "short_name": "SezR Focus",
-  "description": "SezR Focus: görev, odak sayacı, mola ve sınav sayacı.",
+  "description": "Öğrenci koçu, görev takibi, odak sayacı, mola ve sınav sayacı.",
   "start_url": "./focus.html",
   "scope": "./",
   "display": "standalone",
