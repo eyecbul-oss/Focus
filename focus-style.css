@@ -1832,3 +1832,173 @@ input,textarea{-webkit-user-select:text!important;user-select:text!important}
     grid-template-columns:1fr;
   }
 }
+
+
+/* AŞAMA 3 - MOBİL UYGULAMA HİSSİ */
+.focus-modes-panel,
+.native-ready-panel,
+.install-hint{
+  margin-top:24px;
+  padding:24px;
+  border-radius:30px;
+  background:linear-gradient(135deg,rgba(167,139,250,.11),rgba(56,189,248,.07)),rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 18px 42px rgba(0,0,0,.25);
+  backdrop-filter:blur(18px);
+}
+.focus-modes-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+.focus-modes-head h2,
+.native-ready-panel h2{
+  font-family:Montserrat;
+  font-size:26px;
+  margin-bottom:6px;
+}
+.focus-modes-head p,
+.native-ready-panel p{
+  color:#dbeafe;
+  font-weight:900;
+  line-height:1.5;
+}
+.active-focus-mode{
+  padding:9px 13px;
+  border-radius:999px;
+  background:rgba(250,204,21,.12);
+  border:1px solid rgba(250,204,21,.24);
+  color:#fde68a;
+  font-weight:900;
+  white-space:nowrap;
+}
+.focus-mode-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+.focus-mode-card{
+  min-height:94px;
+  padding:15px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(15,23,42,.72);
+  color:white;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+.focus-mode-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(250,204,21,.35);
+  box-shadow:0 0 28px rgba(250,204,21,.12);
+}
+.focus-mode-card.active{
+  background:linear-gradient(180deg,rgba(250,204,21,.18),rgba(250,204,21,.08));
+  border-color:rgba(250,204,21,.42);
+}
+.focus-mode-card b{
+  display:block;
+  font-family:Montserrat;
+  font-size:17px;
+  color:#facc15;
+  margin-bottom:7px;
+}
+.focus-mode-card span{
+  display:block;
+  color:#dbeafe;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.35;
+}
+.native-ready-panel{
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  gap:18px;
+  align-items:center;
+}
+.native-status-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.native-status-grid div{
+  padding:16px;
+  border-radius:20px;
+  background:rgba(15,23,42,.70);
+  border:1px solid rgba(255,255,255,.10);
+  text-align:center;
+}
+.native-status-grid b{
+  display:block;
+  font-family:Montserrat;
+  font-size:22px;
+  color:#facc15;
+  margin-bottom:5px;
+}
+.native-status-grid span{
+  color:#dbeafe;
+  font-weight:900;
+  font-size:12px;
+}
+.install-hint{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  background:linear-gradient(135deg,rgba(250,204,21,.11),rgba(34,197,94,.08)),rgba(255,255,255,.06);
+}
+.install-hint.hidden{
+  display:none!important;
+}
+.install-hint b{
+  display:block;
+  color:#fde68a;
+  font-family:Montserrat;
+  margin-bottom:4px;
+}
+.install-hint span{
+  color:#dbeafe;
+  font-weight:900;
+  line-height:1.45;
+}
+.install-hint button{
+  min-height:44px;
+  padding:0 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(15,23,42,.88);
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+}
+body.quick-mode .timer-ring{
+  box-shadow:0 0 45px rgba(34,197,94,.16);
+}
+body.deep-mode .timer-ring{
+  box-shadow:0 0 55px rgba(167,139,250,.18);
+}
+body.exam-mode .music-panel{
+  display:none!important;
+}
+@media(max-width:950px){
+  .focus-mode-grid,
+  .native-status-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .native-ready-panel{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:620px){
+  .focus-mode-grid,
+  .native-status-grid{
+    grid-template-columns:1fr;
+  }
+  .focus-modes-head,
+  .install-hint{
+    display:grid;
+  }
+}

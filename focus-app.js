@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return {
       email:"",
       tasks:[],
-      dailyTarget:60,
+      dailyTarget:60, focusMode:"standard", notificationEnabled:false,
       exam:{group:"YKS",type:"TYT",date:"2026-06-20",hidden:false},
       notes:[],
       totalSeconds:0,
@@ -336,6 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tasks = getTasks();
     if(!tasks[index]) return;
     tasks[index].done = !tasks[index].done;
+    vibrateSoft(12);
     queueSave();
     render();
   }
@@ -708,9 +709,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if($("trackStatus")) $("trackStatus").textContent = "Mola sırasında ses kapalı";
   }
 
+  function vibrateSoft(ms=18){
+    if(navigator.vibrate) navigator.vibrate(ms);
+  }
+
   function start(){
     if(running) return;
     running = true;
+    vibrateSoft(18);
     if($("timerStatus")) $("timerStatus").textContent = "Çalışıyor";
     playAudio();
     clearInterval(timerId);
@@ -766,6 +772,9 @@ document.addEventListener("DOMContentLoaded", () => {
     data.totalPomodoros = (data.totalPomodoros || 0) + 1;
     queueSave();
     pauseAudio();
+    if(("Notification" in window) && Notification.permission === "granted"){
+      new Notification("SezR Focus", { body:"Odak seansı tamamlandı. Kısa mola iyi gelir." });
+    }
     if($("successModal")) $("successModal").classList.add("show");
     if($("timerStatus")) $("timerStatus").textContent = "Tamamlandı";
     render();
@@ -1008,6 +1017,90 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
+  
+  const focusModes = {
+    standard:{label:"Standart", minutes:25, bodyClass:""},
+    quick:{label:"Quick Start", minutes:10, bodyClass:"quick-mode"},
+    deep:{label:"Deep Focus", minutes:60, bodyClass:"deep-mode"},
+    exam:{label:"Deneme", minutes:120, bodyClass:"exam-mode"}
+  };
+
+  function setFocusMode(mode){
+    data.focusMode = mode || "standard";
+    const cfg = focusModes[data.focusMode] || focusModes.standard;
+
+    focusSeconds = cfg.minutes * 60;
+    totalSeconds = focusSeconds;
+    remaining = totalSeconds;
+
+    document.body.classList.remove("quick-mode","deep-mode","exam-mode");
+    if(cfg.bodyClass) document.body.classList.add(cfg.bodyClass);
+
+    document.querySelectorAll(".focus-mode-card").forEach(btn=>{
+      btn.classList.toggle("active", btn.dataset.focusMode === data.focusMode);
+    });
+
+    if($("activeFocusMode")) $("activeFocusMode").textContent = cfg.label;
+    if($("timerStatus")) $("timerStatus").textContent = cfg.label;
+    queueSave();
+    render();
+  }
+
+  function applyFocusMode(){
+    const mode = data.focusMode || "standard";
+    const cfg = focusModes[mode] || focusModes.standard;
+    document.body.classList.remove("quick-mode","deep-mode","exam-mode");
+    if(cfg.bodyClass) document.body.classList.add(cfg.bodyClass);
+    document.querySelectorAll(".focus-mode-card").forEach(btn=>{
+      btn.classList.toggle("active", btn.dataset.focusMode === mode);
+    });
+    if($("activeFocusMode")) $("activeFocusMode").textContent = cfg.label;
+  }
+
+  function requestNotificationPermission(){
+    if(!("Notification" in window)){
+      alert("Bu cihazda bildirim desteklenmiyor.");
+      return;
+    }
+    Notification.requestPermission().then(result=>{
+      data.notificationEnabled = result === "granted";
+      queueSave();
+      renderNativeStatus();
+      if(result === "granted"){
+        new Notification("SezR Focus", { body:"Bildirimler hazır. Rahatsız etmeden hatırlatacağım." });
+      }
+    });
+  }
+
+  function renderNativeStatus(){
+    if($("offlineStatus")) $("offlineStatus").textContent = "Aktif";
+    if($("notificationStatus")){
+      const ok = ("Notification" in window) && Notification.permission === "granted";
+      $("notificationStatus").textContent = ok ? "Açık" : "Kapalı";
+    }
+    if($("streakStatus")) $("streakStatus").textContent = streak() + " gün";
+    if($("nativeStatusText")){
+      const ok = ("Notification" in window) && Notification.permission === "granted";
+      $("nativeStatusText").textContent = ok
+        ? "Offline kayıt ve bildirim altyapısı aktif."
+        : "Offline kayıt aktif. Bildirim izni istersen ayarlardan açılabilir.";
+    }
+  }
+
+  function maybeShowInstallHint(){
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+    if(isStandalone) return;
+    if(localStorage.getItem("sezr_install_hint_closed") === "1") return;
+    const el = $("installHint");
+    if(el) el.classList.remove("hidden");
+  }
+
+  function closeInstallHint(){
+    localStorage.setItem("sezr_install_hint_closed","1");
+    if($("installHint")) $("installHint").classList.add("hidden");
+  }
+
+
   function render(){
     const d = day();
     const min = Math.floor((d.seconds || 0)/60);
@@ -1187,6 +1280,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   makeRain();
   setTrack("rain");
+  maybeShowInstallHint();
   applyCompactMode();
 
   if(localStorage.getItem("sezr_guest_mode") === "1"){

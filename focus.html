@@ -68,6 +68,42 @@
     </section>
 
 
+    
+    <section class="focus-modes-panel">
+      <div class="focus-modes-head">
+        <div>
+          <h2>Focus Modu</h2>
+          <p>Çalışma şekline göre hazır mod seç.</p>
+        </div>
+        <div id="activeFocusMode" class="active-focus-mode">Standart</div>
+      </div>
+      <div class="focus-mode-grid">
+        <button class="focus-mode-card active" data-focus-mode="standard">
+          <b>Standart</b><span>25 dk dengeli çalışma</span>
+        </button>
+        <button class="focus-mode-card" data-focus-mode="quick">
+          <b>Quick Start</b><span>10 dk hızlı başlangıç</span>
+        </button>
+        <button class="focus-mode-card" data-focus-mode="deep">
+          <b>Deep Focus</b><span>60 dk derin çalışma</span>
+        </button>
+        <button class="focus-mode-card" data-focus-mode="exam">
+          <b>Deneme</b><span>120 dk sınav disiplini</span>
+        </button>
+      </div>
+    </section>
+
+
+    
+    <section id="installHint" class="install-hint hidden">
+      <div>
+        <b>Uygulama gibi kullan</b>
+        <span>Tarayıcı menüsünden “Ana ekrana ekle” ile SezR Focus’u uygulama gibi açabilirsin.</span>
+      </div>
+      <button id="closeInstallHint">Tamam</button>
+    </section>
+
+
     <main class="hero">
       <section class="intro">
         <div class="badge">FOCUS ROOM</div>
@@ -224,6 +260,20 @@
       </div>
     </section>
 
+    
+    <section class="native-ready-panel">
+      <div>
+        <h2>Uygulama Durumu</h2>
+        <p id="nativeStatusText">Offline kayıt ve uygulama modu hazır.</p>
+      </div>
+      <div class="native-status-grid">
+        <div><b id="offlineStatus">Aktif</b><span>Offline kayıt</span></div>
+        <div><b id="notificationStatus">Hazır</b><span>Bildirim altyapısı</span></div>
+        <div><b id="streakStatus">0 gün</b><span>Çalışma serisi</span></div>
+      </div>
+    </section>
+
+
     <section class="weekly-panel">
       <div class="weekly-head">
         <h2>Haftalık Özet</h2>
@@ -322,6 +372,7 @@
     <div id="appHealthStatus" class="app-health-status">Sistem hazır</div>
     <div id="cloudSyncStatus" class="cloud-sync-status">Bulut durumu kontrol ediliyor.</div>
     <button id="compactModeBtn" class="logout-clean">Sade Görünüm</button>
+    <button id="notificationBtn" class="logout-clean">Bildirim İznini Aç</button>
     <button id="syncTestBtn" class="logout-clean">Senkronu Test Et</button>
     <button id="logoutBtn" class="logout-clean">Çıkış Yap</button>
   </aside>
