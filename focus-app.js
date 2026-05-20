@@ -174,6 +174,8 @@ document.addEventListener("DOMContentLoaded", () => {
     el.className = "auth-message" + (type ? " " + type : "");
   }
 
+  function setHealthStatus(text,type="ok"){const el=$("appHealthStatus");if(!el)return;el.textContent=text;el.className="app-health-status "+type;}
+
   function setCloudStatus(text,type=""){
     const el = $("cloudSyncStatus");
     if(!el) return;
@@ -873,6 +875,13 @@ document.addEventListener("DOMContentLoaded", () => {
     applyCompactMode();
   }
 
+  async function testCloudSync(){
+    if(typeof guestMode !== "undefined" && guestMode){setCloudStatus("Misafir moddasın. Cihazlar arası senkron için maille giriş yap.","warn");return;}
+    if(!user || !db){setCloudStatus("Bulut hazır değil. Tekrar giriş yapmayı dene.","warn");return;}
+    try{data.syncTestAt=new Date().toISOString();await db.collection("focusUsers").doc(user.uid).set(data,{merge:true});const snap=await db.collection("focusUsers").doc(user.uid).get();setCloudStatus(snap.exists?"Senkron testi başarılı.":"Senkron testi başarısız.",snap.exists?"ok":"warn");}
+    catch(e){console.warn(e);setCloudStatus("Senkron testi başarısız. Firestore Rules kontrol edilmeli.","warn");}
+  }
+
   function render(){
     const d = day();
     const min = Math.floor((d.seconds || 0)/60);
@@ -1014,7 +1023,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if($("settingsBtn")) $("settingsBtn").onclick = () => $("settingsPanel").classList.toggle("show");
   if($("closeSettingsBtn")) $("closeSettingsBtn").onclick = () => $("settingsPanel").classList.remove("show");
   if($("compactModeBtn")) $("compactModeBtn").onclick = toggleCompactMode;
-  if($("logoutBtn")) $("logoutBtn").onclick = () => {
+  if($("logoutBtn")) if($("syncTestBtn")) $("syncTestBtn").onclick=testCloudSync;
+  $("logoutBtn").onclick = () => {
     localStorage.removeItem("sezr_guest_mode");
     guestMode = false;
     if(auth && user) auth.signOut();

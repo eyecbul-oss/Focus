@@ -1656,3 +1656,20 @@ input,textarea{user-select:text!important;-webkit-user-select:text!important}
   border-color:rgba(249,115,22,.25);
   color:#fed7aa;
 }
+
+
+/* AŞAMA 1 STABİLİZASYON */
+*:not(input):not(textarea){-webkit-user-select:none;user-select:none}
+input,textarea{-webkit-user-select:text!important;user-select:text!important}
+.sessions-panel,#sessionList{display:none!important}
+.app-health-status,.cloud-sync-status{margin:12px 0;padding:13px 14px;border-radius:16px;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.22);color:#dbeafe;font-weight:900;line-height:1.45}
+.app-health-status.ok,.cloud-sync-status.ok{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.22);color:#dcfce7}
+.app-health-status.warn,.cloud-sync-status.warn{background:rgba(249,115,22,.10);border-color:rgba(249,115,22,.25);color:#fed7aa}
+.guest-btn{width:100%;min-height:50px;margin-top:10px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.86);color:#dbeafe;font-weight:900;cursor:pointer}
+.guest-btn:hover{border-color:rgba(250,204,21,.35);color:#fde68a;box-shadow:0 0 24px rgba(250,204,21,.12)}
+.auth-submit:disabled{opacity:.65;cursor:not-allowed}.auth-message.error{color:#fecaca!important}.auth-message.success{color:#bbf7d0!important}
+.primary-actions{display:grid!important;grid-template-columns:1.4fr .9fr .7fr!important;gap:12px!important}
+.primary-actions button,.task-actions button,.target-options button,.break-modal-actions button,.mode-row button,.break-card button,.plan-input-row button,.note-row button{min-height:52px!important;border-radius:17px!important;font-weight:900!important;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease,border-color .18s ease}
+.primary-actions button:hover,.task-actions button:hover,.target-options button:hover,.break-modal-actions button:hover,.mode-row button:hover,.break-card button:hover,.plan-input-row button:hover,.note-row button:hover{transform:translateY(-2px);filter:brightness(1.07);box-shadow:0 0 24px rgba(250,204,21,.13),0 12px 28px rgba(0,0,0,.18);border-color:rgba(250,204,21,.32)!important}
+#fullscreenBtn.icon-btn,#fullscreenBtn{min-width:64px;padding:0!important;font-size:22px!important}.daily-task{min-height:58px;overflow-wrap:anywhere}#noteList .list-item,#noteList .list-item span{text-decoration:none!important}
+@media(max-width:720px){.primary-actions{grid-template-columns:1fr 1fr 70px!important}}
