@@ -1,7 +1,40 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
-import GradientBackground from '../../components/ui/GradientBackground';
-import GlassCard from '../../components/ui/GlassCard';
-import { COLORS } from '../../theme/colors';
-export default function ExamScreen(){return <GradientBackground><ScrollView contentContainerStyle={styles.container}><Text style={styles.title}>Sınav</Text><GlassCard style={styles.big}><Text style={styles.days}>214</Text><Text style={styles.label}>gün kaldı</Text></GlassCard><GlassCard><Text style={styles.section}>Bugünün önerisi</Text><Text style={styles.text}>Konu eksiklerini kapat ve kısa bir soru pratiği yap.</Text></GlassCard></ScrollView></GradientBackground>}
-const styles=StyleSheet.create({container:{padding:18,paddingBottom:110},title:{color:COLORS.text,fontSize:32,fontWeight:'900',marginTop:18,marginBottom:14},big:{alignItems:'center',marginBottom:16},days:{color:COLORS.primary,fontSize:86,fontWeight:'900',letterSpacing:-4},label:{color:COLORS.text,fontSize:22,fontWeight:'900'},section:{color:COLORS.primary,fontSize:18,fontWeight:'900',marginBottom:8},text:{color:COLORS.text,fontWeight:'800',lineHeight:22}});
+{
+  "name": "sezr-focus-premium-native",
+  "version": "1.0.0",
+  "private": true,
+  "main": "App.tsx",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "eas:android:preview": "eas build -p android --profile preview",
+    "eas:android:production": "eas build -p android --profile production",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.0.4",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "expo": "^52.0.0",
+    "expo-av": "~15.0.1",
+    "expo-build-properties": "~0.13.1",
+    "expo-haptics": "~14.0.1",
+    "expo-linear-gradient": "~14.0.2",
+    "expo-notifications": "~0.29.13",
+    "expo-secure-store": "~14.0.0",
+    "expo-status-bar": "~2.0.0",
+    "firebase": "^10.14.1",
+    "react": "18.3.1",
+    "react-native": "0.76.5",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.4.0",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~18.3.12",
+    "typescript": "^5.3.3"
+  }
+}
