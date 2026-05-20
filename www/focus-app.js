@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .sort((a,b)=>priorityWeight(a.task.priority)-priorityWeight(b.task.priority))
         .forEach(({task,index})=>{
         const item = document.createElement("div");
-        item.className = "daily-task " + (task.done ? "done" : "");
+        item.className = "daily-task " + (task.done ? "done " : "") + " priority-" + (task.priority || "normal");
         item.innerHTML = '<div class="daily-task-main"><span class="check">'+(task.done ? "✓" : "")+'</span><span class="task-content"><span class="task-title"></span><span class="task-meta"><span class="task-pill type-pill"></span><span class="task-pill priority-pill"></span></span></span></div><button class="daily-task-delete">Sil</button>';
         item.querySelector(".task-title").textContent = task.text;
         item.querySelector(".type-pill").textContent = task.type || "Görev";
@@ -1095,6 +1095,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
+  
+  function activeTaskCount(){
+    return getTasks().filter(t=>!t.done).length;
+  }
+
+  function criticalTaskCount(){
+    return getTasks().filter(t=>!t.done && t.priority === "critical").length;
+  }
+
+  function renderDailyFlowCoach(){
+    const d = day();
+    const min = Math.floor((d.seconds || 0)/60);
+    const ts = taskStats();
+    const active = activeTaskCount();
+    const critical = criticalTaskCount();
+
+    if($("morningCoachText")){
+      if(ts.total === 0) $("morningCoachText").textContent = "Bugün için 1 küçük görev ekle. Başlamak en önemli adım.";
+      else if(critical > 0) $("morningCoachText").textContent = "Önce kritik görevi bitir. Sonra hafif görevlere geç.";
+      else $("morningCoachText").textContent = "İlk göreve odaklan. Kısa bir seans yeterli.";
+    }
+
+    if($("eveningCoachText")){
+      if(min === 0) $("eveningCoachText").textContent = "Bugün henüz çalışma yok. Quick Start seçebilirsin.";
+      else if(ts.total > 0 && ts.done === ts.total) $("eveningCoachText").textContent = "Görevler tamamlandı. Günlük ritim korunuyor.";
+      else $("eveningCoachText").textContent = min + " dk çalışma var. Kalan görev: " + active + ".";
+    }
+
+    if($("taskCoachSuggestion")){
+      if(active >= 5) $("taskCoachSuggestion").textContent = "Görev sayısı fazla. 1-2 tanesini bugüne öncelik yap, diğerlerini yarına bırak.";
+      else if(critical > 0) $("taskCoachSuggestion").textContent = "Kritik görev var. İlk seansı ona ayırmak daha iyi olur.";
+      else if(ts.total === 0) $("taskCoachSuggestion").textContent = "Görev eklerken küçük ve ölçülebilir yaz: örn. 20 soru, 15 dk tekrar.";
+      else $("taskCoachSuggestion").textContent = "Görevler dengeli görünüyor. İlk seansa başlayabilirsin.";
+    }
+  }
+
+
   function render(){
     const d = day();
     const min = Math.floor((d.seconds || 0)/60);
@@ -1147,6 +1184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderRhythm();
     renderExamCountdown();
     renderCoachPanel();
+    renderDailyFlowCoach();
     renderDailyReview();
     applyCompactMode();
   }
