@@ -1,0 +1,34 @@
+AŞAMA 4 - GOOGLE PLAY HAZIRLIK KONTROL LİSTESİ
+
+1) Google Play Console
+- Developer hesabı açılır.
+- Yeni uygulama oluşturulur.
+- Uygulama adı: SezR Focus
+- Varsayılan dil: Türkçe
+- Uygulama türü: Uygulama
+- Kategori: Eğitim / Verimlilik
+
+2) Android Build
+- GitHub Actions ile AAB alınır.
+- Debug APK sadece test içindir.
+- Play Store için imzalı release AAB gerekir.
+
+3) Zorunlu sayfalar
+- Gizlilik politikası URL'si
+- Veri güvenliği formu
+- İçerik derecelendirmesi
+- Hedef kitle / aile politikası
+- Reklam bilgisi: reklam yoksa “Hayır”
+
+4) Mağaza varlıkları
+- Uygulama ikonu
+- Kısa açıklama
+- Uzun açıklama
+- Telefon ekran görüntüleri
+- 7 inç / 10 inç tablet ekran görüntüleri isteğe bağlı
+- Özellik grafiği: 1024x500
+
+5) Test
+- Dahili test kanalı oluştur.
+- En az bir test kullanıcısı ekle.
+- Uygulamayı test edip hata yoksa üretime gönder.

@@ -1,0 +1,26 @@
+Uygulama adı:
+SezR Focus
+
+Kısa açıklama:
+Öğrenci koçu, görev takibi, odak sayacı ve sınav geri sayımı.
+
+Uzun açıklama:
+SezR Focus, öğrencilerin günlük çalışma düzenini daha verimli yönetmesi için tasarlanmış sade ve güçlü bir çalışma koçu uygulamasıdır.
+
+Uygulama ile günlük görevlerini ekleyebilir, odak seansları başlatabilir, molalarını yönetebilir ve sınava kalan süreyi takip edebilirsin. SezR Focus; özellikle YKS, LGS, KPSS ve DGS gibi sınavlara hazırlanan öğrenciler için çalışma disiplini oluşturmayı kolaylaştırır.
+
+Özellikler:
+- Günlük görev takibi
+- Görev tipi ve öncelik seçimi
+- Odak / pomodoro sayacı
+- Tam ekran focus modu
+- Ayrı mola ekranı
+- Sınav geri sayımı
+- Haftalık ilerleme
+- Çalışma ritmi
+- Not alma
+- Öğrenci koçu önerileri
+- Bulut senkron desteği
+- Misafir kullanım modu
+
+SezR Focus, karmaşık ekranlar yerine sade ve odaklı bir deneyim sunar.
