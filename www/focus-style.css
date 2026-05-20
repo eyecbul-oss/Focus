@@ -2002,3 +2002,57 @@ body.exam-mode .music-panel{
     display:grid;
   }
 }
+
+
+/* APP V2 CLEANUP */
+.install-hint{display:none!important}
+
+/* Focus mode cards: clearer selected vs hover */
+.focus-mode-card{
+  position:relative;
+  overflow:hidden;
+}
+.focus-mode-card::after{
+  content:"";
+  position:absolute;
+  right:12px;
+  top:12px;
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.16);
+}
+.focus-mode-card:hover{
+  background:rgba(15,23,42,.86)!important;
+  border-color:rgba(255,255,255,.22)!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.22)!important;
+}
+.focus-mode-card.active{
+  background:linear-gradient(180deg,rgba(250,204,21,.22),rgba(250,204,21,.09))!important;
+  border-color:rgba(250,204,21,.65)!important;
+  box-shadow:0 0 0 2px rgba(250,204,21,.18),0 18px 44px rgba(250,204,21,.10)!important;
+}
+.focus-mode-card.active::after{
+  content:"✓";
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  background:#facc15;
+  color:#111827;
+  font-size:14px;
+  font-weight:900;
+  border-color:#facc15;
+}
+.focus-mode-card.active b{
+  color:#facc15!important;
+}
+.focus-mode-card:not(.active):hover::after{
+  background:rgba(250,204,21,.28);
+  border-color:rgba(250,204,21,.38);
+}
+.active-focus-mode{
+  min-width:98px;
+  text-align:center;
+}

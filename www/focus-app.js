@@ -1087,13 +1087,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function maybeShowInstallHint(){
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-    if(isStandalone) return;
-    if(localStorage.getItem("sezr_install_hint_closed") === "1") return;
-    const el = $("installHint");
-    if(el) el.classList.remove("hidden");
-  }
+  function maybeShowInstallHint(){ return; }
 
   function closeInstallHint(){
     localStorage.setItem("sezr_install_hint_closed","1");
@@ -1280,7 +1274,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   makeRain();
   setTrack("rain");
-  maybeShowInstallHint();
+  
   applyCompactMode();
 
   if(localStorage.getItem("sezr_guest_mode") === "1"){
