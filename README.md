@@ -1,106 +1,62 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import GradientBackground from '../../components/ui/GradientBackground';
 import GlassCard from '../../components/ui/GlassCard';
 import NeonButton from '../../components/ui/NeonButton';
-import TimerRing from '../../components/timer/TimerRing';
-import BreakModal from '../../components/timer/BreakModal';
-import FullscreenFocusView from './FullscreenFocusView';
-import useFocusTimer from '../../hooks/useFocusTimer';
 import { COLORS } from '../../theme/colors';
-import { useFocusStore } from '../../store/focusStore';
-import { useSettingsStore, SoundTrack } from '../../store/settingsStore';
+import { useAuthStore } from '../../store/authStore';
+import { loginWithEmail, registerWithEmail } from '../../services/firebaseAuthService';
 
-const modes = [
-  { label: 'Quick', seconds: 10 * 60 },
-  { label: 'Standart', seconds: 25 * 60 },
-  { label: 'Deep', seconds: 60 * 60 },
-  { label: 'Deneme', seconds: 120 * 60 },
-];
+export default function AuthScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [registerMode, setRegisterMode] = useState(false);
+  const [message, setMessage] = useState('');
+  const login = useAuthStore((s) => s.login);
+  const continueGuest = useAuthStore((s) => s.continueGuest);
+  const setCloudStatus = useAuthStore((s) => s.setCloudStatus);
 
-const sounds: { label: string; value: SoundTrack }[] = [
-  { label: 'Yağmur', value: 'rain' },
-  { label: 'Lo-fi', value: 'lofi' },
-  { label: 'Piano', value: 'piano' },
-  { label: 'Ateş', value: 'fire' },
-  { label: 'Sessiz', value: 'silent' },
-];
-
-export default function FocusScreen() {
-  const focusSeconds = useFocusStore((s) => s.focusSeconds);
-  const setFocusSeconds = useFocusStore((s) => s.setFocusSeconds);
-  const breakSeconds = useFocusStore((s) => s.breakSeconds);
-  const soundTrack = useSettingsStore((s) => s.soundTrack);
-  const setSoundTrack = useSettingsStore((s) => s.setSoundTrack);
-  const fullscreen = useSettingsStore((s) => s.fullscreenFocus);
-  const setFullscreen = useSettingsStore((s) => s.setFullscreenFocus);
-
-  const timer = useFocusTimer(focusSeconds);
-  const breakTimer = useFocusTimer(breakSeconds);
-  const [breakVisible, setBreakVisible] = useState(false);
-
-  const openBreak = () => {
-    timer.pause();
-    setBreakVisible(true);
-  };
-
-  const finishBreak = () => {
-    breakTimer.pause();
-    setBreakVisible(false);
+  const submit = async () => {
+    try {
+      setMessage(registerMode ? 'Hesap oluşturuluyor...' : 'Giriş yapılıyor...');
+      const user = registerMode
+        ? await registerWithEmail(email.trim(), password)
+        : await loginWithEmail(email.trim(), password);
+      login(user.email || email.trim());
+      setCloudStatus('Bulut senkron aktif');
+      setMessage('Başarılı');
+    } catch (e) {
+      setMessage('Giriş yapılamadı. Firebase ayarlarını veya şifreni kontrol et.');
+    }
   };
 
   return (
     <GradientBackground>
-      <ScrollView contentContainerStyle={[styles.container, fullscreen && styles.fullscreen]}>
-        <Text style={styles.title}>{fullscreen ? 'Tam Ekran Focus' : 'Focus'}</Text>
-        <TimerRing remaining={timer.remaining} />
-
-        <View style={styles.actions}>
-          <NeonButton title={timer.running ? 'Duraklat' : 'Başlat'} onPress={() => { Haptics.selectionAsync(); timer.running ? timer.pause() : timer.start(); }} />
-          <NeonButton title="Mola" variant="dark" onPress={openBreak} />
-          <NeonButton title="Sıfırla" variant="dark" onPress={timer.reset} />
-        </View>
-
-        <GlassCard style={styles.card}>
-          <Text style={styles.section}>Focus Modları</Text>
-          <View style={styles.wrap}>
-            {modes.map((m) => (
-              <NeonButton key={m.label} title={m.label} variant={m.seconds === focusSeconds ? 'primary' : 'dark'} onPress={() => setFocusSeconds(m.seconds)} style={styles.smallBtn} />
-            ))}
-          </View>
-        </GlassCard>
-
-        <GlassCard style={styles.card}>
-          <Text style={styles.section}>Müzik Seçimi</Text>
-          <View style={styles.wrap}>
-            {sounds.map((s) => (
-              <NeonButton key={s.value} title={s.label} variant={s.value === soundTrack ? 'primary' : 'dark'} onPress={() => setSoundTrack(s.value)} style={styles.smallBtn} />
-            ))}
-          </View>
-        </GlassCard>
-
+      <View style={styles.container}>
         <GlassCard>
-          <Text style={styles.section}>Tam Ekran</Text>
-          <Text style={styles.text}>Odak sırasında dikkat dağıtıcı kartları azaltır.</Text>
-          <NeonButton title={fullscreen ? 'Standart Görünüm' : 'Tam Ekran Mod'} variant={fullscreen ? 'danger' : 'primary'} onPress={() => setFullscreen(!fullscreen)} />
-        </GlassCard>
+          <Text style={styles.brand}>SezR <Text style={{ color: COLORS.primary }}>Focus</Text></Text>
+          <Text style={styles.title}>{registerMode ? 'Yeni hesap oluştur' : 'Hesabına giriş yap'}</Text>
+          <Text style={styles.info}>Mail ve şifre ile cihazlar arası senkron kullanabilirsin.</Text>
 
-        <FullscreenFocusView visible={fullscreen} remaining={timer.remaining} running={timer.running} onToggle={() => timer.running ? timer.pause() : timer.start()} onExit={() => setFullscreen(false)} />
-        <BreakModal visible={breakVisible} remaining={breakTimer.remaining} running={breakTimer.running} onToggle={() => breakTimer.running ? breakTimer.pause() : breakTimer.start()} onFinish={finishBreak} />
-      </ScrollView>
+          <TextInput placeholder="mail@adres.com" placeholderTextColor={COLORS.muted} value={email} onChangeText={setEmail} autoCapitalize="none" style={styles.input} />
+          <TextInput placeholder="Şifre" placeholderTextColor={COLORS.muted} value={password} onChangeText={setPassword} secureTextEntry style={styles.input} />
+
+          <NeonButton title={registerMode ? 'Hesap Oluştur' : 'Giriş Yap'} onPress={submit} />
+          <NeonButton title={registerMode ? 'Giriş ekranına dön' : 'Yeni hesap oluştur'} variant="dark" onPress={() => setRegisterMode(!registerMode)} />
+          <NeonButton title="Misafir Devam Et" variant="dark" onPress={continueGuest} />
+
+          {!!message && <Text style={styles.message}>{message}</Text>}
+        </GlassCard>
+      </View>
     </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 18, paddingBottom: 110 },
-  fullscreen: { justifyContent: 'center', minHeight: 760 },
-  title: { color: COLORS.text, fontSize: 32, fontWeight: '900', marginTop: 18, marginBottom: 24 },
-  actions: { flexDirection: 'row', gap: 10, marginVertical: 22 },
-  card: { marginBottom: 14 },
-  section: { color: COLORS.primary, fontSize: 18, fontWeight: '900', marginBottom: 12 },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  smallBtn: { minWidth: '45%' },
-  text: { color: COLORS.muted, fontWeight: '800', lineHeight: 22, marginBottom: 12 },
+  container: { flex: 1, justifyContent: 'center', padding: 18 },
+  brand: { color: COLORS.text, fontSize: 34, fontWeight: '900', marginBottom: 14 },
+  title: { color: COLORS.text, fontSize: 24, fontWeight: '900' },
+  info: { color: COLORS.muted, fontWeight: '800', lineHeight: 22, marginVertical: 14 },
+  input: { minHeight: 52, borderRadius: 18, backgroundColor: 'rgba(2,6,23,.50)', color: COLORS.text, paddingHorizontal: 14, fontWeight: '800', borderWidth: 1, borderColor: COLORS.border, marginBottom: 12 },
+  message: { color: COLORS.primary, fontWeight: '900', marginTop: 12 },
 });

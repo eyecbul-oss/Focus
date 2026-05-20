@@ -1,66 +1,26 @@
-import { create } from 'zustand';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import GradientBackground from '../../components/ui/GradientBackground';
+import GlassCard from '../../components/ui/GlassCard';
+import NeonButton from '../../components/ui/NeonButton';
+import { COLORS } from '../../theme/colors';
+import { useFocusStore } from '../../store/focusStore';
 
-export type TaskPriority = 'critical' | 'normal' | 'light';
-
-export type FocusTask = {
-  id: string;
-  title: string;
-  type: string;
-  priority: TaskPriority;
-  done: boolean;
-};
-
-export type FocusNote = {
-  id: string;
-  text: string;
-  createdAt: string;
-};
-
-type FocusState = {
-  tasks: FocusTask[];
-  notes: FocusNote[];
-  focusSeconds: number;
-  dailyTarget: number;
-  totalToday: number;
-  pomodoros: number;
-  breakSeconds: number;
-  addTask: (title: string, type?: string, priority?: TaskPriority) => void;
-  toggleTask: (id: string) => void;
-  addNote: (text: string) => void;
-  noteToTask: (id: string) => void;
-  setFocusSeconds: (seconds: number) => void;
-  setBreakSeconds: (seconds: number) => void;
-  addTodaySeconds: (seconds: number) => void;
-  finishPomodoro: () => void;
-};
-
-export const useFocusStore = create<FocusState>((set) => ({
-  tasks: [
-    { id: '1', title: 'Problemler 20 soru', type: 'Soru', priority: 'critical', done: false },
-    { id: '2', title: 'Paragraf 15 soru', type: 'Paragraf', priority: 'normal', done: false },
-  ],
-  notes: [],
-  focusSeconds: 25 * 60,
-  dailyTarget: 60,
-  totalToday: 0,
-  pomodoros: 0,
-  breakSeconds: 5 * 60,
-  addTask: (title, type = 'Soru', priority = 'normal') =>
-    set((s) => ({ tasks: [{ id: Date.now().toString(), title, type, priority, done: false }, ...s.tasks] })),
-  toggleTask: (id) =>
-    set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) })),
-  addNote: (text) =>
-    set((s) => ({ notes: [{ id: Date.now().toString(), text, createdAt: new Date().toISOString() }, ...s.notes] })),
-  noteToTask: (id) =>
-    set((s) => {
-      const note = s.notes.find((n) => n.id === id);
-      if (!note) return s;
-      return {
-        tasks: [{ id: Date.now().toString(), title: 'Nottan görev: ' + note.text, type: 'Yanlış', priority: 'normal', done: false }, ...s.tasks],
-      };
-    }),
-  setFocusSeconds: (focusSeconds) => set({ focusSeconds }),
-  setBreakSeconds: (breakSeconds) => set({ breakSeconds }),
-  addTodaySeconds: (seconds) => set((s) => ({ totalToday: s.totalToday + seconds })),
-  finishPomodoro: () => set((s) => ({ pomodoros: s.pomodoros + 1 })),
-}));
+export default function HomeScreen(){
+  const tasks=useFocusStore(s=>s.tasks); const totalToday=useFocusStore(s=>s.totalToday);
+  const done=tasks.filter(t=>t.done).length; const rate=tasks.length?Math.round(done/tasks.length*100):0;
+  return <GradientBackground><ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.header}><View style={styles.logo}><Text style={styles.logoText}>S<Text style={styles.logoGold}>R</Text></Text></View><View><Text style={styles.title}>SezR Focus</Text><Text style={styles.subtitle}>Görev • Odak • Sınav Koçu</Text></View></View>
+    <GlassCard style={styles.hero}><Text style={styles.badge}>Öğrenci Koçu</Text><Text style={styles.heroTitle}>Bugünkü çalışma ritmini birlikte başlatalım.</Text><Text style={styles.heroText}>İlk kritik görevi seç, 25 dakikalık seansla başla ve günü ölçülebilir kapat.</Text><NeonButton title="Odak seansına başla"/></GlassCard>
+    <View style={styles.stats}><GlassCard style={styles.stat}><Text style={styles.statValue}>{Math.floor(totalToday/60)} dk</Text><Text style={styles.statLabel}>Bugün</Text></GlassCard><GlassCard style={styles.stat}><Text style={styles.statValue}>%{rate}</Text><Text style={styles.statLabel}>Görev</Text></GlassCard><GlassCard style={styles.stat}><Text style={styles.statValue}>82</Text><Text style={styles.statLabel}>Skor</Text></GlassCard></View>
+    <GlassCard><Text style={styles.section}>Akıllı Öneri</Text><Text style={styles.text}>{tasks.length===done?'Bugünkü görevler tamam. Kısa tekrar yeterli.':'Kritik görevi ilk seansa al. Diğerleri bekleyebilir.'}</Text></GlassCard>
+  </ScrollView></GradientBackground>
+}
+const styles=StyleSheet.create({
+  container:{padding:18,paddingBottom:110},header:{flexDirection:'row',alignItems:'center',gap:12,marginTop:18,marginBottom:18},
+  logo:{width:54,height:54,borderRadius:20,backgroundColor:'rgba(250,204,21,.16)',alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:'rgba(250,204,21,.28)'},logoText:{color:COLORS.text,fontWeight:'900',fontSize:24},logoGold:{color:COLORS.primary},
+  title:{color:COLORS.text,fontSize:25,fontWeight:'900'},subtitle:{color:COLORS.muted,fontWeight:'800',marginTop:3},hero:{marginBottom:14},badge:{color:COLORS.primary,fontWeight:'900',marginBottom:12},
+  heroTitle:{color:COLORS.text,fontSize:30,lineHeight:36,fontWeight:'900',letterSpacing:-1},heroText:{color:COLORS.muted,fontWeight:'800',lineHeight:22,marginVertical:14},
+  stats:{flexDirection:'row',gap:10,marginBottom:14},stat:{flex:1,alignItems:'center',padding:14},statValue:{color:COLORS.primary,fontSize:22,fontWeight:'900'},statLabel:{color:COLORS.muted,fontWeight:'800',fontSize:12,marginTop:4},
+  section:{color:COLORS.primary,fontWeight:'900',fontSize:18,marginBottom:8},text:{color:COLORS.text,fontWeight:'800',lineHeight:22}
+});

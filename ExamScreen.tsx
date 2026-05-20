@@ -1,11 +1,25 @@
-import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { create } from 'zustand';
 
-export default function GlassCard({children,style}:{children:React.ReactNode;style?:ViewStyle}) {
-  return <View style={[styles.card,style]}>{children}</View>;
-}
-const styles = StyleSheet.create({
-  card:{backgroundColor:COLORS.card,borderWidth:1,borderColor:COLORS.border,borderRadius:30,padding:18,
-  shadowColor:'#000',shadowOffset:{width:0,height:18},shadowOpacity:.28,shadowRadius:28,elevation:10}
-});
+export type SoundTrack = 'rain' | 'lofi' | 'piano' | 'fire' | 'silent';
+
+type SettingsState = {
+  soundTrack: SoundTrack;
+  volume: number;
+  fullscreenFocus: boolean;
+  notifications: boolean;
+  setSoundTrack: (track: SoundTrack) => void;
+  setVolume: (volume: number) => void;
+  setFullscreenFocus: (value: boolean) => void;
+  setNotifications: (value: boolean) => void;
+};
+
+export const useSettingsStore = create<SettingsState>((set) => ({
+  soundTrack: 'rain',
+  volume: 60,
+  fullscreenFocus: false,
+  notifications: false,
+  setSoundTrack: (soundTrack) => set({ soundTrack }),
+  setVolume: (volume) => set({ volume }),
+  setFullscreenFocus: (fullscreenFocus) => set({ fullscreenFocus }),
+  setNotifications: (notifications) => set({ notifications }),
+}));
