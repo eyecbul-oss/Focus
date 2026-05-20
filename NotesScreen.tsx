@@ -1,11 +1,25 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, Pressable, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
-const fmt=(sec:number)=>`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
-export default function TimerRing({remaining}:{remaining:number}){
-  return <View style={styles.ring}><Text style={styles.time}>{fmt(remaining)}</Text><Text style={styles.label}>Odak Modu</Text></View>;
+
+const filters = ['Tümü', 'Kritik', 'Tamamlanan'];
+
+export default function TaskFilters({ active, onChange }: { active: string; onChange: (v: string) => void }) {
+  return (
+    <View style={styles.row}>
+      {filters.map((f) => (
+        <Pressable key={f} onPress={() => onChange(f)} style={[styles.pill, active === f && styles.active]}>
+          <Text style={[styles.text, active === f && styles.activeText]}>{f}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
 }
-const styles=StyleSheet.create({
-  ring:{width:260,height:260,borderRadius:130,alignItems:'center',justifyContent:'center',alignSelf:'center',backgroundColor:'rgba(15,23,42,.72)',borderWidth:2,borderColor:'rgba(250,204,21,.42)',shadowColor:COLORS.primary,shadowOpacity:.25,shadowRadius:34,elevation:18},
-  time:{color:COLORS.text,fontSize:58,fontWeight:'900',letterSpacing:-2}, label:{color:COLORS.primary,fontWeight:'900',marginTop:8}
+
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 8, marginBottom: 14 },
+  pill: { paddingHorizontal: 14, minHeight: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15,23,42,.70)', borderWidth: 1, borderColor: COLORS.border },
+  active: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  text: { color: COLORS.text, fontWeight: '900' },
+  activeText: { color: '#111827' },
 });

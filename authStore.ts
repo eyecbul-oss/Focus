@@ -1,16 +1,19 @@
-import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FocusTask } from '../store/focusStore';
 
-export async function requestNotifications() {
-  const result = await Notifications.requestPermissionsAsync();
-  return result.status === 'granted';
+const KEY = 'sezr_focus_local_data';
+
+export type LocalFocusData = {
+  tasks: FocusTask[];
+  totalToday: number;
+  updatedAt: string;
+};
+
+export async function saveLocalData(data: LocalFocusData) {
+  await AsyncStorage.setItem(KEY, JSON.stringify(data));
 }
 
-export async function notifyFocusDone() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'SezR Focus',
-      body: 'Odak seansı tamamlandı. Kısa mola iyi gelir.',
-    },
-    trigger: null,
-  });
+export async function loadLocalData(): Promise<LocalFocusData | null> {
+  const raw = await AsyncStorage.getItem(KEY);
+  return raw ? JSON.parse(raw) : null;
 }

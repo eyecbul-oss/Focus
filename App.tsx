@@ -1,7 +1,50 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import GradientBackground from '../../components/ui/GradientBackground';
-import GlassCard from '../../components/ui/GlassCard';
+import { Modal, StyleSheet, Text, View } from 'react-native';
+import GlassCard from '../ui/GlassCard';
+import NeonButton from '../ui/NeonButton';
 import { COLORS } from '../../theme/colors';
-export default function StatsScreen(){return <GradientBackground><ScrollView contentContainerStyle={styles.container}><Text style={styles.title}>Ritim</Text><View style={styles.grid}><GlassCard style={styles.stat}><Text style={styles.value}>60 dk</Text><Text style={styles.label}>Ortalama</Text></GlassCard><GlassCard style={styles.stat}><Text style={styles.value}>3 gün</Text><Text style={styles.label}>Seri</Text></GlassCard></View><GlassCard><Text style={styles.section}>Haftalık yorum</Text><Text style={styles.text}>Bu hafta ritim oluşmaya başladı. Kısa seanslarla devam et.</Text></GlassCard></ScrollView></GradientBackground>}
-const styles=StyleSheet.create({container:{padding:18,paddingBottom:110},title:{color:COLORS.text,fontSize:32,fontWeight:'900',marginTop:18,marginBottom:14},grid:{flexDirection:'row',gap:12,marginBottom:16},stat:{flex:1,alignItems:'center'},value:{color:COLORS.primary,fontSize:26,fontWeight:'900'},label:{color:COLORS.muted,fontWeight:'800',marginTop:4},section:{color:COLORS.primary,fontWeight:'900',fontSize:18,marginBottom:8},text:{color:COLORS.text,fontWeight:'800',lineHeight:22}});
+
+function fmt(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+export default function BreakModal({
+  visible,
+  remaining,
+  running,
+  onToggle,
+  onFinish,
+}: {
+  visible: boolean;
+  remaining: number;
+  running: boolean;
+  onToggle: () => void;
+  onFinish: () => void;
+}) {
+  return (
+    <Modal visible={visible} animationType="fade" transparent>
+      <View style={styles.backdrop}>
+        <GlassCard style={styles.box}>
+          <Text style={styles.label}>Mola</Text>
+          <Text style={styles.time}>{fmt(remaining)}</Text>
+          <Text style={styles.info}>Bitirince çalışma süren kaldığı yerden devam eder.</Text>
+          <View style={styles.actions}>
+            <NeonButton title={running ? 'Duraklat' : 'Başlat'} onPress={onToggle} />
+            <NeonButton title="Bitir ve Dön" variant="dark" onPress={onFinish} />
+          </View>
+        </GlassCard>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: { flex: 1, backgroundColor: 'rgba(2,6,23,0.92)', alignItems: 'center', justifyContent: 'center', padding: 18 },
+  box: { width: '100%', alignItems: 'center' },
+  label: { color: COLORS.primary, fontWeight: '900', fontSize: 18, marginBottom: 14 },
+  time: { color: COLORS.text, fontSize: 86, fontWeight: '900', letterSpacing: -4 },
+  info: { color: COLORS.muted, fontWeight: '800', textAlign: 'center', marginVertical: 16 },
+  actions: { width: '100%', gap: 10 },
+});

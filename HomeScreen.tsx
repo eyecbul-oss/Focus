@@ -1,20 +1,7 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from './firebase';
-import { FocusTask, FocusNote } from '../store/focusStore';
-
-export type CloudFocusData = {
-  tasks: FocusTask[];
-  notes: FocusNote[];
-  totalToday: number;
-  pomodoros: number;
-  updatedAt: string;
+export const COLORS = {
+  bg:'#020617', bg2:'#07111F', card:'rgba(15,23,42,0.74)',
+  cardSoft:'rgba(255,255,255,0.055)', border:'rgba(255,255,255,0.12)',
+  text:'#F8FAFC', muted:'#94A3B8', primary:'#FACC15',
+  primaryDark:'#F59E0B', green:'#22C55E', orange:'#F97316',
+  red:'#EF4444', cyan:'#38BDF8', purple:'#A78BFA'
 };
-
-export async function saveCloudData(uid: string, data: CloudFocusData) {
-  await setDoc(doc(db, 'focusUsers', uid), data, { merge: true });
-}
-
-export async function loadCloudData(uid: string): Promise<CloudFocusData | null> {
-  const snap = await getDoc(doc(db, 'focusUsers', uid));
-  return snap.exists() ? (snap.data() as CloudFocusData) : null;
-}

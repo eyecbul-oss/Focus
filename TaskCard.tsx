@@ -1,109 +1,126 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import GradientBackground from '../../components/ui/GradientBackground';
-import GlassCard from '../../components/ui/GlassCard';
-import NeonButton from '../../components/ui/NeonButton';
-import TimerRing from '../../components/timer/TimerRing';
-import BreakModal from '../../components/timer/BreakModal';
-import FullscreenFocusView from './FullscreenFocusView';
-import useFocusTimer from '../../hooks/useFocusTimer';
-import { COLORS } from '../../theme/colors';
-import { useFocusStore } from '../../store/focusStore';
-import { useSettingsStore, SoundTrack } from '../../store/settingsStore';
-import { playTrack, stopSound } from '../../services/audioService';
+import { create } from 'zustand';
 
-const modes = [
-  { label: 'Quick', seconds: 10 * 60 },
-  { label: 'Standart', seconds: 25 * 60 },
-  { label: 'Deep', seconds: 60 * 60 },
-  { label: 'Deneme', seconds: 120 * 60 },
+export type TaskPriority = 'critical' | 'normal' | 'light';
+
+export type FocusTask = {
+  id: string;
+  title: string;
+  type: string;
+  priority: TaskPriority;
+  done: boolean;
+};
+
+export type FocusNote = {
+  id: string;
+  text: string;
+  createdAt: string;
+};
+
+export type FocusHistoryItem = {
+  id: string;
+  minutes: number;
+  mode: string;
+  createdAt: string;
+};
+
+export type ExamSettings = {
+  type: 'TYT' | 'AYT' | 'LGS' | 'KPSS' | 'DGS' | 'Özel';
+  date: string;
+};
+
+type FocusSnapshot = {
+  tasks: FocusTask[];
+  notes: FocusNote[];
+  history: FocusHistoryItem[];
+  exam: ExamSettings;
+  focusSeconds: number;
+  dailyTarget: number;
+  totalToday: number;
+  pomodoros: number;
+  breakSeconds: number;
+};
+
+type FocusState = FocusSnapshot & {
+  addTask: (title: string, type?: string, priority?: TaskPriority) => void;
+  toggleTask: (id: string) => void;
+  deleteTask: (id: string) => void;
+  clearDoneTasks: () => void;
+  addNote: (text: string) => void;
+  noteToTask: (id: string) => void;
+  setFocusSeconds: (seconds: number) => void;
+  setBreakSeconds: (seconds: number) => void;
+  setExam: (exam: ExamSettings) => void;
+  addTodaySeconds: (seconds: number) => void;
+  finishPomodoro: (minutes?: number, mode?: string) => void;
+  hydrate: (data: Partial<FocusSnapshot>) => void;
+  snapshot: () => FocusSnapshot;
+};
+
+const initialTasks: FocusTask[] = [
+  { id: '1', title: 'Problemler 20 soru', type: 'Soru', priority: 'critical', done: false },
+  { id: '2', title: 'Paragraf 15 soru', type: 'Paragraf', priority: 'normal', done: false },
 ];
 
-const sounds: { label: string; value: SoundTrack }[] = [
-  { label: 'Yağmur', value: 'rain' },
-  { label: 'Lo-fi', value: 'lofi' },
-  { label: 'Piano', value: 'piano' },
-  { label: 'Ateş', value: 'fire' },
-  { label: 'Sessiz', value: 'silent' },
-];
+export const useFocusStore = create<FocusState>((set, get) => ({
+  tasks: initialTasks,
+  notes: [],
+  history: [],
+  exam: { type: 'TYT', date: '2026-06-20' },
+  focusSeconds: 25 * 60,
+  dailyTarget: 60,
+  totalToday: 0,
+  pomodoros: 0,
+  breakSeconds: 5 * 60,
 
-export default function FocusScreen() {
-  const focusSeconds = useFocusStore((s) => s.focusSeconds);
-  const setFocusSeconds = useFocusStore((s) => s.setFocusSeconds);
-  const breakSeconds = useFocusStore((s) => s.breakSeconds);
-  const soundTrack = useSettingsStore((s) => s.soundTrack);
-  const volume = useSettingsStore((s) => s.volume);
-  const setSoundTrack = useSettingsStore((s) => s.setSoundTrack);
-  const fullscreen = useSettingsStore((s) => s.fullscreenFocus);
-  const setFullscreen = useSettingsStore((s) => s.setFullscreenFocus);
+  addTask: (title, type = 'Soru', priority = 'normal') =>
+    set((s) => ({ tasks: [{ id: Date.now().toString(), title, type, priority, done: false }, ...s.tasks] })),
 
-  const timer = useFocusTimer(focusSeconds);
-  const breakTimer = useFocusTimer(breakSeconds);
-  const [breakVisible, setBreakVisible] = useState(false);
+  toggleTask: (id) =>
+    set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) })),
 
-  const openBreak = () => {
-    timer.pause();
-    stopSound();
-    setBreakVisible(true);
-  };
+  deleteTask: (id) =>
+    set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
 
-  const finishBreak = () => {
-    breakTimer.pause();
-    setBreakVisible(false);
-  };
+  clearDoneTasks: () =>
+    set((s) => ({ tasks: s.tasks.filter((t) => !t.done) })),
 
-  return (
-    <GradientBackground>
-      <ScrollView contentContainerStyle={[styles.container, fullscreen && styles.fullscreen]}>
-        <Text style={styles.title}>{fullscreen ? 'Tam Ekran Focus' : 'Focus'}</Text>
-        <TimerRing remaining={timer.remaining} />
+  addNote: (text) =>
+    set((s) => ({ notes: [{ id: Date.now().toString(), text, createdAt: new Date().toISOString() }, ...s.notes] })),
 
-        <View style={styles.actions}>
-          <NeonButton title={timer.running ? 'Duraklat' : 'Başlat'} onPress={() => { Haptics.selectionAsync(); timer.running ? (timer.pause(), stopSound()) : (timer.start(), playTrack(soundTrack, volume / 100)); }} />
-          <NeonButton title="Mola" variant="dark" onPress={openBreak} />
-          <NeonButton title="Sıfırla" variant="dark" onPress={timer.reset} />
-        </View>
+  noteToTask: (id) =>
+    set((s) => {
+      const note = s.notes.find((n) => n.id === id);
+      if (!note) return s;
+      return {
+        tasks: [{ id: Date.now().toString(), title: 'Nottan görev: ' + note.text, type: 'Yanlış', priority: 'normal', done: false }, ...s.tasks],
+      };
+    }),
 
-        <GlassCard style={styles.card}>
-          <Text style={styles.section}>Focus Modları</Text>
-          <View style={styles.wrap}>
-            {modes.map((m) => (
-              <NeonButton key={m.label} title={m.label} variant={m.seconds === focusSeconds ? 'primary' : 'dark'} onPress={() => setFocusSeconds(m.seconds)} style={styles.smallBtn} />
-            ))}
-          </View>
-        </GlassCard>
+  setFocusSeconds: (focusSeconds) => set({ focusSeconds }),
+  setBreakSeconds: (breakSeconds) => set({ breakSeconds }),
+  setExam: (exam) => set({ exam }),
+  addTodaySeconds: (seconds) => set((s) => ({ totalToday: s.totalToday + seconds })),
 
-        <GlassCard style={styles.card}>
-          <Text style={styles.section}>Müzik Seçimi</Text>
-          <View style={styles.wrap}>
-            {sounds.map((s) => (
-              <NeonButton key={s.value} title={s.label} variant={s.value === soundTrack ? 'primary' : 'dark'} onPress={() => setSoundTrack(s.value)} style={styles.smallBtn} />
-            ))}
-          </View>
-        </GlassCard>
+  finishPomodoro: (minutes = 25, mode = 'Standart') =>
+    set((s) => ({
+      pomodoros: s.pomodoros + 1,
+      history: [{ id: Date.now().toString(), minutes, mode, createdAt: new Date().toISOString() }, ...s.history].slice(0, 80),
+    })),
 
-        <GlassCard>
-          <Text style={styles.section}>Tam Ekran</Text>
-          <Text style={styles.text}>Odak sırasında dikkat dağıtıcı kartları azaltır.</Text>
-          <NeonButton title={fullscreen ? 'Standart Görünüm' : 'Tam Ekran Mod'} variant={fullscreen ? 'danger' : 'primary'} onPress={() => setFullscreen(!fullscreen)} />
-        </GlassCard>
+  hydrate: (data) => set((s) => ({ ...s, ...data })),
 
-        <FullscreenFocusView visible={fullscreen} remaining={timer.remaining} running={timer.running} onToggle={() => timer.running ? timer.pause() : timer.start()} onExit={() => setFullscreen(false)} />
-        <BreakModal visible={breakVisible} remaining={breakTimer.remaining} running={breakTimer.running} onToggle={() => breakTimer.running ? breakTimer.pause() : breakTimer.start()} onFinish={finishBreak} />
-      </ScrollView>
-    </GradientBackground>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { padding: 18, paddingBottom: 110 },
-  fullscreen: { justifyContent: 'center', minHeight: 760 },
-  title: { color: COLORS.text, fontSize: 32, fontWeight: '900', marginTop: 18, marginBottom: 24 },
-  actions: { flexDirection: 'row', gap: 10, marginVertical: 22 },
-  card: { marginBottom: 14 },
-  section: { color: COLORS.primary, fontSize: 18, fontWeight: '900', marginBottom: 12 },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  smallBtn: { minWidth: '45%' },
-  text: { color: COLORS.muted, fontWeight: '800', lineHeight: 22, marginBottom: 12 },
-});
+  snapshot: () => {
+    const s = get();
+    return {
+      tasks: s.tasks,
+      notes: s.notes,
+      history: s.history,
+      exam: s.exam,
+      focusSeconds: s.focusSeconds,
+      dailyTarget: s.dailyTarget,
+      totalToday: s.totalToday,
+      pomodoros: s.pomodoros,
+      breakSeconds: s.breakSeconds,
+    };
+  },
+}));

@@ -1,16 +1,22 @@
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth } from './firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
+import { FocusTask, FocusNote, FocusHistoryItem, ExamSettings } from '../store/focusStore';
 
-export async function loginWithEmail(email: string, password: string) {
-  const result = await signInWithEmailAndPassword(auth, email, password);
-  return result.user;
+export type CloudFocusData = {
+  tasks: FocusTask[];
+  notes: FocusNote[];
+  history: FocusHistoryItem[];
+  exam: ExamSettings;
+  totalToday: number;
+  pomodoros: number;
+  updatedAt: string;
+};
+
+export async function saveCloudData(uid: string, data: CloudFocusData) {
+  await setDoc(doc(db, 'focusUsers', uid), data, { merge: true });
 }
 
-export async function registerWithEmail(email: string, password: string) {
-  const result = await createUserWithEmailAndPassword(auth, email, password);
-  return result.user;
-}
-
-export async function logoutFirebase() {
-  await signOut(auth);
+export async function loadCloudData(uid: string): Promise<CloudFocusData | null> {
+  const snap = await getDoc(doc(db, 'focusUsers', uid));
+  return snap.exists() ? (snap.data() as CloudFocusData) : null;
 }
