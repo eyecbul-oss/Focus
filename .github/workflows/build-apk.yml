@@ -1,0 +1,46 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repoyu indir
+        uses: actions/checkout@v4
+
+      - name: Node 22 kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Java 17 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Paketleri kur
+        run: npm install
+
+      - name: Android platformunu ekle
+        run: npx cap add android
+
+      - name: Capacitor senkronize et
+        run: npx cap sync android
+
+      - name: Gradle izni ver
+        run: chmod +x android/gradlew
+
+      - name: APK üret
+        run: cd android && ./gradlew assembleDebug
+
+      - name: APK dosyasını yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: SezR-Focus-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
