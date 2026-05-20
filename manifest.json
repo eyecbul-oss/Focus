@@ -1,11 +1,9 @@
 {
   "name": "SezR Focus",
   "short_name": "SezR Focus",
-  "description": "Bağımsız öğrenci çalışma koçu.",
   "start_url": "./focus.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "any",
   "background_color": "#020617",
   "theme_color": "#020617",
   "lang": "tr",

@@ -1,0 +1,12 @@
+Bu paket sadece GitHub Pages'teki Focus sayfasını günceller.
+
+Yüklenecek ana dosyalar:
+- focus.html
+- focus-style.css
+- focus-app.js
+- manifest.json
+- service-worker.js
+
+Android Expo dosyalarına dokunmaz.
+Repo köküne yükle ve eski focus dosyalarının üstüne yaz.
+GitHub Pages cache yüzünden değişiklik geç görünürse Ctrl+F5 yap veya birkaç dakika bekle.
