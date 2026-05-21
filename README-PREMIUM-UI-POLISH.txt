@@ -1,15 +1,22 @@
-Bu paket görünümü daha bitmiş/premium hale getirmek için hazırlandı.
+import React from 'react';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+import { COLORS } from '../../theme/colors';
 
-Değişenler:
-- Ana ekran daha dolu ve premium koç paneli oldu.
-- Sayaç kartı ve timer ring görünümü güncellendi.
-- Görev kartları daha profesyonel hale getirildi.
-- Alt navigasyon seçili ikon arka planı eklendi.
-- Renk paleti koyu lacivert + sarı vurguya çekildi.
-- package.json içinde expo-asset eklendi.
-- app.json minSdkVersion 24 olarak ayarlandı.
+export default function GlassCard({ children, style }: { children: React.ReactNode; style?: ViewStyle | ViewStyle[] }) {
+  return <View style={[styles.card, style]}>{children}</View>;
+}
 
-Kullanım:
-ZIP içeriğini repo köküne sürükle.
-Aynı adlı dosyaların üzerine yaz.
-Actions tekrar çalıştır.
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 30,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.30,
+    shadowRadius: 28,
+    elevation: 12,
+  },
+});
