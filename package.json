@@ -1,46 +1,45 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../../theme/colors';
-
-export default function GradientBackground({ children }: { children: React.ReactNode }) {
-  return (
-    <LinearGradient colors={[COLORS.bg, COLORS.bg2, COLORS.bg3]} style={styles.root}>
-      <View style={styles.goldGlow} />
-      <View style={styles.cyanGlow} />
-      <View style={styles.greenGlow} />
-      {children}
-    </LinearGradient>
-  );
+{
+  "name": "sezr-focus-premium-native",
+  "version": "1.0.0",
+  "private": true,
+  "main": "App.tsx",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "prebuild:android": "expo prebuild --platform android --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.0.4",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "expo": "~52.0.47",
+    "expo-application": "~6.0.2",
+    "expo-asset": "~11.0.5",
+    "expo-av": "~15.0.2",
+    "expo-build-properties": "~0.13.3",
+    "expo-constants": "~17.0.8",
+    "expo-font": "~13.0.4",
+    "expo-haptics": "~14.0.1",
+    "expo-linear-gradient": "~14.0.2",
+    "expo-notifications": "~0.29.14",
+    "expo-secure-store": "~14.0.1",
+    "expo-status-bar": "~2.0.1",
+    "firebase": "^10.14.1",
+    "react": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-gesture-handler": "~2.20.2",
+    "react-native-reanimated": "~3.16.1",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.4.0",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~18.3.12",
+    "typescript": "^5.3.3"
+  }
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  goldGlow: {
-    position: 'absolute',
-    top: -90,
-    left: -70,
-    width: 290,
-    height: 290,
-    borderRadius: 290,
-    backgroundColor: 'rgba(250,204,21,0.17)',
-  },
-  cyanGlow: {
-    position: 'absolute',
-    top: 80,
-    right: -100,
-    width: 280,
-    height: 280,
-    borderRadius: 280,
-    backgroundColor: 'rgba(56,189,248,0.12)',
-  },
-  greenGlow: {
-    position: 'absolute',
-    bottom: -130,
-    left: 40,
-    width: 300,
-    height: 300,
-    borderRadius: 300,
-    backgroundColor: 'rgba(34,197,94,0.08)',
-  },
-});
