@@ -1,15 +1,23 @@
 @echo off
 title SezR Focus Baslat
-echo SezR Focus kuruluyor...
+cd /d "%~dp0"
+echo Klasor: %cd%
 echo.
-npm install
-if errorlevel 1 (
-  echo.
-  echo HATA: npm install basarisiz oldu. Node.js kurulu mu kontrol et.
-  pause
-  exit /b 1
-)
+echo Node kontrol ediliyor...
+node -v
+echo NPM kontrol ediliyor...
+npm -v
+echo.
+echo Paketler kuruluyor. Bu islem birkac dakika surebilir...
+call npm install
+if errorlevel 1 goto error
 echo.
 echo Expo baslatiliyor...
-npx expo start -c
+call npx expo start -c
+goto end
+:error
+echo.
+echo HATA OLUSTU. Bu ekranin fotografini ChatGPT'ye gonder.
+:end
+echo.
 pause
