@@ -1,19 +1,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text } from 'react-native';
 import { COLORS } from '../theme/colors';
 import TimerScreen from '../screens/TimerScreen';
 import StatsScreen from '../screens/StatsScreen';
+import TasksScreen from '../screens/TasksScreen';
+import CoachScreen from '../screens/CoachScreen';
+import ExamScreen from '../screens/ExamScreen';
+import RhythmScreen from '../screens/RhythmScreen';
 
 const Tab = createBottomTabNavigator();
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.bg }}>
-      <Text style={{ color: COLORS.text, fontSize: 24 }}>{title}</Text>
-    </View>
-  );
-}
 
 export default function BottomTabs() {
   return (
@@ -28,11 +23,12 @@ export default function BottomTabs() {
         tabBarInactiveTintColor: COLORS.muted,
       }}
     >
-      <Tab.Screen name='Koç'>{() => <Placeholder title='Koç' />}</Tab.Screen>
-      <Tab.Screen name='Görev'>{() => <Placeholder title='Görevler' />}</Tab.Screen>
-      <Tab.Screen name='Sayaç' component={TimerScreen} />
-      <Tab.Screen name='İstatistik' component={StatsScreen} />
-      <Tab.Screen name='Ritim'>{() => <Placeholder title='Ritim' />}</Tab.Screen>
+      <Tab.Screen name='Koc' component={CoachScreen} />
+      <Tab.Screen name='Gorev' component={TasksScreen} />
+      <Tab.Screen name='Sayac' component={TimerScreen} />
+      <Tab.Screen name='Istatistik' component={StatsScreen} />
+      <Tab.Screen name='Sinav' component={ExamScreen} />
+      <Tab.Screen name='Ritim' component={RhythmScreen} />
     </Tab.Navigator>
   );
 }
