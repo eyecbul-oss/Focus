@@ -1,14 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import GlassCard from '../components/GlassCard';
 import NeonButton from '../components/NeonButton';
 import useFocusTimer from '../hooks/useFocusTimer';
 import { COLORS } from '../theme/colors';
 import { useFocusStore } from '../store/focusStore';
+import { scheduleFocusFinishedNotification } from '../services/notificationService';
 
 export default function TimerScreen() {
   const timer = useFocusTimer(25);
   const addSession = useFocusStore((s) => s.addSession);
+
+  async function startTimer() {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await scheduleFocusFinishedNotification(timer.totalMinutes);
+    timer.setRunning(true);
+  }
 
   return (
     <View style={styles.container}>
@@ -18,13 +26,22 @@ export default function TimerScreen() {
         <Text style={styles.time}>{timer.time}</Text>
 
         <NeonButton
-          title={timer.running ? 'Durdur' : 'Başlat'}
-          onPress={() => timer.setRunning(!timer.running)}
+          title={timer.running ? 'Durdur' : 'Baslat'}
+          onPress={() => {
+            if (timer.running) {
+              timer.setRunning(false);
+            } else {
+              startTimer();
+            }
+          }}
         />
 
         <NeonButton
-          title='Seansı Kaydet'
-          onPress={() => addSession(timer.totalMinutes)}
+          title='Seansi Kaydet'
+          onPress={() => {
+            addSession(timer.totalMinutes);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }}
         />
       </GlassCard>
     </View>
