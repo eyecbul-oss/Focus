@@ -7,6 +7,7 @@ import TasksScreen from '../screens/TasksScreen';
 import CoachScreen from '../screens/CoachScreen';
 import ExamScreen from '../screens/ExamScreen';
 import RhythmScreen from '../screens/RhythmScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -29,6 +30,7 @@ export default function BottomTabs() {
       <Tab.Screen name='Istatistik' component={StatsScreen} />
       <Tab.Screen name='Sinav' component={ExamScreen} />
       <Tab.Screen name='Ritim' component={RhythmScreen} />
+      <Tab.Screen name='Ayarlar' component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
