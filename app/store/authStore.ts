@@ -1,11 +1,13 @@
 import { create } from 'zustand';
+import { signInAnonymously } from 'firebase/auth';
+import { auth } from '../services/firebase';
 
 type AuthState = {
   email: string | null;
   uid: string | null;
   guest: boolean;
   cloudStatus: string;
-  loginGuest: () => void;
+  loginGuest: () => Promise<void>;
   loginEmail: (email: string) => void;
   logout: () => void;
   setCloudStatus: (status: string) => void;
@@ -17,12 +19,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   guest: false,
   cloudStatus: 'Hazır',
 
-  loginGuest: () =>
+  loginGuest: async () => {
+    const userCredential = await signInAnonymously(auth);
+
     set({
       guest: true,
       email: null,
-      uid: 'guest',
-    }),
+      uid: userCredential.user.uid,
+      cloudStatus: 'Misafir bulut aktif',
+    });
+  },
 
   loginEmail: (email) =>
     set({
