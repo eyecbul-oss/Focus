@@ -10,7 +10,7 @@ android {
         applicationId 'com.sezr.focuspro.nativeapp'
         minSdk 23
         targetSdk 35
-        versionCode 6
-        versionName '1.0.5-final-test'
+        versionCode 7
+        versionName '1.0.6-pastel-glass'
     }
 }
