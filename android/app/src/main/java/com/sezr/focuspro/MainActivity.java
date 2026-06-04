@@ -29,15 +29,15 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
     private static final String PREFS = "sezr_focus_pro_native";
-    private int focusDuration = 1500, seconds = 1500, sessions = 0, minutes = 0, target = 60;
+    private int focusDuration = 1500, seconds = 1500, sessions = 0, minutes = 0, target = 60, activeTab = 0;
     private boolean running = false;
     private String examName = "YKS", examDate = "2026-06-20", profile = "Misafir", musicMode = "Sessiz";
     private final int[] week = new int[7];
     private final List<FocusTask> tasks = new ArrayList<>();
     private final List<String> notes = new ArrayList<>();
     private SharedPreferences prefs;
+    private LinearLayout content, taskBox;
     private TextView timer, status, statMin, statSes, targetText, percentText, weeklyText, examText, noteText, profileText, musicText, fullTimer, fullStatus;
-    private LinearLayout taskBox;
     private Button toggle, fullToggle;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -50,8 +50,7 @@ public class MainActivity extends Activity {
                 running = false;
                 int earned = focusDuration / 60;
                 sessions++; minutes += earned; week[today()] += earned;
-                toggle.setText("Başlat"); status.setText("Seans tamamlandı.");
-                save(); updateAll();
+                save(); show(activeTab);
             }
         }
     };
@@ -59,31 +58,102 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-        load(); FocusNotificationHelper.ensureChannel(this);
-        ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true); scroll.setBackgroundColor(Color.parseColor("#020617"));
-        LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(dp(18), dp(26), dp(18), dp(26));
-        scroll.addView(root, new ScrollView.LayoutParams(-1, -2));
-        root.addView(header(), m(0,0,0,14));
-        root.addView(profileCard(), m(0,0,0,14));
-        root.addView(timerCard(), m(0,0,0,14));
-        root.addView(statsRow(), m(0,0,0,14));
-        root.addView(FocusProgressCardFactory.create(this, minutes, sessions), m(0,0,0,14));
-        root.addView(targetCard(), m(0,0,0,14));
-        root.addView(weeklyCard(), m(0,0,0,14));
-        root.addView(musicCard(), m(0,0,0,14));
-        root.addView(tasksCard(), m(0,0,0,14));
-        root.addView(examCard(), m(0,0,0,14));
-        root.addView(notesCard(), wrap());
-        updateAll(); renderTasks(); renderNotes(); setContentView(scroll);
+        load();
+        FocusNotificationHelper.ensureChannel(this);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(14), dp(18), dp(14), dp(14));
+        root.setBackgroundColor(Color.parseColor("#020617"));
+        root.addView(header(), m(0,0,0,10));
+        root.addView(nav(), m(0,0,0,10));
+        ScrollView scroll = new ScrollView(this);
+        content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
+        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        setContentView(root);
+        show(0);
     }
 
-    private LinearLayout header(){ LinearLayout c=card(); c.setGravity(Gravity.CENTER); c.setPadding(dp(18),dp(18),dp(18),dp(18)); TextView t=txt("SezR Focus Pro",32,"#facc15",true); t.setGravity(Gravity.CENTER); c.addView(t,wrap()); TextView s=txt("Bağımsız Android odak uygulaması",15,"#cbd5e1",false); s.setGravity(Gravity.CENTER); c.addView(s,wrap()); return c; }
+    private LinearLayout header() {
+        LinearLayout c = card(); c.setGravity(Gravity.CENTER); c.setPadding(dp(14), dp(14), dp(14), dp(14));
+        TextView t = txt("SezR Focus Pro", 28, "#facc15", true); t.setGravity(Gravity.CENTER); c.addView(t, wrap());
+        TextView s = txt("Bağımsız Android odak uygulaması", 13, "#cbd5e1", false); s.setGravity(Gravity.CENTER); c.addView(s, wrap());
+        return c;
+    }
 
-    private LinearLayout profileCard(){ LinearLayout c=card(); c.setPadding(dp(18),dp(18),dp(18),dp(18)); c.addView(txt("Profil / Giriş",22,"#facc15",true),wrap()); profileText=txt("",16,"#dbeafe",false); profileText.setPadding(0,dp(8),0,dp(12)); c.addView(profileText,wrap()); EditText input=input("Adını yaz veya misafir kal"); if(!"Misafir".equals(profile)) input.setText(profile); c.addView(input,h(52,0,0,0,10)); LinearLayout row=row(); Button guest=dark("Misafir"), save=primary("Kaydet"); row.addView(guest,wb()); row.addView(save,wb()); c.addView(row,wrap()); guest.setOnClickListener(v->{profile="Misafir";input.setText("");save();updateProfile();}); save.setOnClickListener(v->{String x=input.getText().toString().trim();profile=x.length()==0?"Misafir":x;save();updateProfile();}); return c; }
+    private LinearLayout nav() {
+        LinearLayout n = row();
+        n.addView(tab("Ana",0), wb()); n.addView(tab("Odak",1), wb()); n.addView(tab("Görev",2), wb()); n.addView(tab("Sınav",3), wb()); n.addView(tab("Not",4), wb());
+        return n;
+    }
 
-    private LinearLayout timerCard(){ LinearLayout c=card(); c.setGravity(Gravity.CENTER); c.setPadding(dp(18),dp(22),dp(18),dp(22)); c.addView(pill("ODAK SAYACI"),center()); timer=txt(format(seconds),64,"#ffffff",true); timer.setGravity(Gravity.CENTER); timer.setPadding(0,dp(18),0,0); c.addView(timer,wrap()); status=txt("Hazır",16,"#cbd5e1",false); status.setGravity(Gravity.CENTER); status.setPadding(0,dp(8),0,dp(18)); c.addView(status,wrap()); LinearLayout modes=row(); modes.addView(mode("25 dk",25),wb()); modes.addView(mode("45 dk",45),wb()); modes.addView(mode("60 dk",60),wb()); c.addView(modes,m(0,0,0,14)); toggle=primary("Başlat"); c.addView(toggle,height(54)); Button reset=dark("Sıfırla"), full=dark("Tam Ekran Odak Modu"); c.addView(reset,h(54,0,10,0,0)); c.addView(full,h(54,0,10,0,0)); toggle.setOnClickListener(v->toggleTimer()); reset.setOnClickListener(v->resetTimer()); full.setOnClickListener(v->fullscreen()); return c; }
+    private Button tab(String label, int index) {
+        Button b = dark(label); b.setTextSize(11);
+        b.setOnClickListener(v -> show(index));
+        return b;
+    }
 
-    private LinearLayout statsRow(){ LinearLayout r=row(); statMin=stat("0 dk","Bugünkü çalışma"); statSes=stat("0","Tamamlanan seans"); r.addView((LinearLayout)statMin.getParent(),wc()); r.addView((LinearLayout)statSes.getParent(),wc()); return r; }
+    private void show(int tab) {
+        activeTab = tab;
+        content.removeAllViews();
+        if (tab == 0) showHome();
+        if (tab == 1) showFocus();
+        if (tab == 2) showTasks();
+        if (tab == 3) showExam();
+        if (tab == 4) showNotes();
+    }
+
+    private void showHome() {
+        content.addView(profileCard(), m(0,0,0,12));
+        content.addView(statsRow(), m(0,0,0,12));
+        content.addView(FocusProgressCardFactory.create(this, minutes, sessions), m(0,0,0,12));
+        content.addView(targetCard(), m(0,0,0,12));
+        content.addView(weeklyCard(), m(0,0,0,12));
+        updateAll();
+    }
+
+    private void showFocus() {
+        content.addView(timerCard(), m(0,0,0,12));
+        content.addView(musicCard(), m(0,0,0,12));
+        updateTimer(); updateMusic();
+    }
+
+    private void showTasks() {
+        content.addView(tasksCard(), wrap());
+        renderTasks();
+    }
+
+    private void showExam() {
+        content.addView(examCard(), wrap());
+        updateExam();
+    }
+
+    private void showNotes() {
+        content.addView(notesCard(), wrap());
+        renderNotes();
+    }
+
+    private LinearLayout profileCard() {
+        LinearLayout c=card(); c.setPadding(dp(18),dp(18),dp(18),dp(18)); c.addView(txt("Profil / Giriş",22,"#facc15",true),wrap());
+        profileText=txt("",16,"#dbeafe",false); profileText.setPadding(0,dp(8),0,dp(12)); c.addView(profileText,wrap());
+        EditText input=input("Adını yaz veya misafir kal"); if(!"Misafir".equals(profile)) input.setText(profile); c.addView(input,h(52,0,0,0,10));
+        LinearLayout r=row(); Button guest=dark("Misafir"), save=primary("Kaydet"); r.addView(guest,wb()); r.addView(save,wb()); c.addView(r,wrap());
+        guest.setOnClickListener(v->{profile="Misafir"; input.setText(""); save(); updateProfile();});
+        save.setOnClickListener(v->{String x=input.getText().toString().trim(); profile=x.length()==0?"Misafir":x; save(); updateProfile();});
+        return c;
+    }
+
+    private LinearLayout timerCard() {
+        LinearLayout c=card(); c.setGravity(Gravity.CENTER); c.setPadding(dp(18),dp(22),dp(18),dp(22)); c.addView(pill("ODAK SAYACI"),center());
+        timer=txt(format(seconds),66,"#ffffff",true); timer.setGravity(Gravity.CENTER); timer.setPadding(0,dp(18),0,0); c.addView(timer,wrap());
+        status=txt(running?"Odak seansı çalışıyor":"Hazır",16,"#cbd5e1",false); status.setGravity(Gravity.CENTER); status.setPadding(0,dp(8),0,dp(18)); c.addView(status,wrap());
+        LinearLayout modes=row(); modes.addView(mode("25 dk",25),wb()); modes.addView(mode("45 dk",45),wb()); modes.addView(mode("60 dk",60),wb()); c.addView(modes,m(0,0,0,14));
+        toggle=primary(running?"Duraklat":"Başlat"); c.addView(toggle,height(54)); Button reset=dark("Sıfırla"), full=dark("Tam Ekran Odak Modu"); c.addView(reset,h(54,0,10,0,0)); c.addView(full,h(54,0,10,0,0));
+        toggle.setOnClickListener(v->toggleTimer()); reset.setOnClickListener(v->resetTimer()); full.setOnClickListener(v->fullscreen()); return c;
+    }
+
+    private LinearLayout statsRow(){ LinearLayout r=row(); statMin=stat(minutes+" dk","Bugünkü çalışma"); statSes=stat(String.valueOf(sessions),"Tamamlanan seans"); r.addView((LinearLayout)statMin.getParent(),wc()); r.addView((LinearLayout)statSes.getParent(),wc()); return r; }
 
     private LinearLayout targetCard(){ LinearLayout c=card(); c.setPadding(dp(18),dp(18),dp(18),dp(18)); c.addView(txt("Günlük Hedef",22,"#facc15",true),wrap()); targetText=txt("",16,"#dbeafe",false); targetText.setPadding(0,dp(8),0,dp(8)); c.addView(targetText,wrap()); percentText=txt("",34,"#ffffff",true); c.addView(percentText,wrap()); LinearLayout r=row(); r.setPadding(0,dp(12),0,0); r.addView(targetBtn("30 dk",30),wb()); r.addView(targetBtn("60 dk",60),wb()); r.addView(targetBtn("90 dk",90),wb()); c.addView(r,wrap()); return c; }
 
@@ -93,23 +163,23 @@ public class MainActivity extends Activity {
 
     private LinearLayout tasksCard(){ LinearLayout c=card(); c.setPadding(dp(18),dp(18),dp(18),dp(18)); c.addView(txt("Bugünkü görevler",22,"#facc15",true),wrap()); EditText in=input("Örn. 30 problem çöz"); c.addView(in,h(52,0,14,0,10)); Button add=primary("Görev Ekle"); c.addView(add,height(52)); taskBox=new LinearLayout(this); taskBox.setOrientation(LinearLayout.VERTICAL); taskBox.setPadding(0,dp(14),0,0); c.addView(taskBox,wrap()); Button clear=dark("Tamamlananları Temizle"); c.addView(clear,h(52,0,12,0,0)); add.setOnClickListener(v->{String x=in.getText().toString().trim(); if(x.length()==0)return; tasks.add(new FocusTask(x,false)); in.setText(""); save(); renderTasks();}); clear.setOnClickListener(v->{for(int i=tasks.size()-1;i>=0;i--) if(tasks.get(i).done) tasks.remove(i); save(); renderTasks();}); return c; }
 
-    private LinearLayout examCard(){ LinearLayout c=card(); c.setPadding(dp(18),dp(18),dp(18),dp(18)); c.addView(txt("Sınav Sayacı",22,"#facc15",true),wrap()); TextView help=txt("Tarih formatı: 2026-06-20",13,"#94a3b8",false); c.addView(help,wrap()); EditText n=input("Sınav adı"); n.setText(examName); c.addView(n,h(52,0,10,0,10)); EditText d=input("yyyy-MM-dd"); d.setText(examDate); c.addView(d,h(52,0,0,0,10)); Button saveBtn=primary("Sınavı Kaydet"); c.addView(saveBtn,height(52)); examText=txt("",17,"#dbeafe",false); examText.setPadding(0,dp(14),0,0); c.addView(examText,wrap()); saveBtn.setOnClickListener(v->{examName=n.getText().toString().trim(); if(examName.length()==0) examName="Sınav"; examDate=d.getText().toString().trim(); save(); updateExam();}); return c; }
+    private LinearLayout examCard(){ LinearLayout c=card(); c.setPadding(dp(18),dp(18),dp(18),dp(18)); c.addView(txt("Sınav Sayacı",22,"#facc15",true),wrap()); c.addView(txt("Tarih formatı: 2026-06-20",13,"#94a3b8",false),wrap()); EditText n=input("Sınav adı"); n.setText(examName); c.addView(n,h(52,0,10,0,10)); EditText d=input("yyyy-MM-dd"); d.setText(examDate); c.addView(d,h(52,0,0,0,10)); Button saveBtn=primary("Sınavı Kaydet"); c.addView(saveBtn,height(52)); examText=txt("",17,"#dbeafe",false); examText.setPadding(0,dp(14),0,0); c.addView(examText,wrap()); saveBtn.setOnClickListener(v->{examName=n.getText().toString().trim(); if(examName.length()==0) examName="Sınav"; examDate=d.getText().toString().trim(); save(); updateExam();}); return c; }
 
     private LinearLayout notesCard(){ LinearLayout c=card(); c.setPadding(dp(18),dp(18),dp(18),dp(18)); c.addView(txt("Notlar",22,"#facc15",true),wrap()); EditText in=input("Kısa not ekle"); c.addView(in,h(52,0,14,0,10)); Button add=primary("Not Ekle"), clear=dark("Notları Temizle"); c.addView(add,height(52)); c.addView(clear,h(52,0,10,0,0)); noteText=txt("",15,"#cbd5e1",false); noteText.setPadding(0,dp(14),0,0); c.addView(noteText,wrap()); add.setOnClickListener(v->{String x=in.getText().toString().trim(); if(x.length()==0)return; notes.add(x); in.setText(""); save(); renderNotes();}); clear.setOnClickListener(v->{notes.clear(); save(); renderNotes();}); return c; }
 
-    private void toggleTimer(){ running=!running; if(running){toggle.setText("Duraklat"); status.setText("Odak seansı çalışıyor"); handler.post(tick);} else {toggle.setText("Devam Et"); status.setText("Duraklatıldı"); handler.removeCallbacks(tick);} syncFull(); }
-    private void resetTimer(){ running=false; seconds=focusDuration; handler.removeCallbacks(tick); toggle.setText("Başlat"); status.setText("Hazır"); updateTimer(); }
-    private Button mode(String label,int min){ Button b=dark(label); b.setOnClickListener(v->{ if(running)return; focusDuration=min*60; seconds=focusDuration; status.setText(label+" modu seçildi"); updateTimer();}); return b; }
-    private Button targetBtn(String label,int min){ Button b=dark(label); b.setOnClickListener(v->{target=min; save(); updateAll();}); return b; }
-    private Button music(String label){ Button b=dark(label); b.setTextSize(12); b.setOnClickListener(v->{musicMode=label; save(); updateMusic();}); return b; }
+    private void toggleTimer(){ running=!running; if(running){ if(toggle!=null)toggle.setText("Duraklat"); if(status!=null)status.setText("Odak seansı çalışıyor"); handler.post(tick);} else { if(toggle!=null)toggle.setText("Devam Et"); if(status!=null)status.setText("Duraklatıldı"); handler.removeCallbacks(tick);} syncFull(); }
+    private void resetTimer(){ running=false; seconds=focusDuration; handler.removeCallbacks(tick); if(toggle!=null)toggle.setText("Başlat"); if(status!=null)status.setText("Hazır"); updateTimer(); }
+    private Button mode(String label,int min){ Button b=dark(label); b.setOnClickListener(v->{ if(running)return; focusDuration=min*60; seconds=focusDuration; if(status!=null)status.setText(label+" modu seçildi"); updateTimer();}); return b; }
+    private Button targetBtn(String label,int min){ Button b=dark(label); b.setOnClickListener(v->{target=min; save(); show(0);}); return b; }
+    private Button music(String label){ Button b=dark(label); b.setTextSize(10); b.setOnClickListener(v->{musicMode=label; save(); updateMusic();}); return b; }
 
-    private void fullscreen(){ Dialog dlg=new Dialog(this); dlg.requestWindowFeature(Window.FEATURE_NO_TITLE); LinearLayout c=new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setGravity(Gravity.CENTER); c.setPadding(dp(22),dp(22),dp(22),dp(22)); c.setBackgroundColor(Color.parseColor("#020617")); TextView brand=txt("SezR Focus Pro",26,"#facc15",true); brand.setGravity(Gravity.CENTER); c.addView(brand,m(0,0,0,28)); fullTimer=txt(format(seconds),84,"#ffffff",true); fullTimer.setGravity(Gravity.CENTER); c.addView(fullTimer,wrap()); fullStatus=txt(running?"Odak seansı çalışıyor":"Başlamak için hazır",18,"#cbd5e1",false); fullStatus.setGravity(Gravity.CENTER); fullStatus.setPadding(0,dp(12),0,dp(20)); c.addView(fullStatus,wrap()); TextView music=txt("Atmosfer: "+musicMode,15,"#94a3b8",false); music.setGravity(Gravity.CENTER); c.addView(music,m(0,0,0,18)); fullToggle=primary(running?"Duraklat":"Başlat"); c.addView(fullToggle,height(56)); Button close=dark("Çık"); c.addView(close,h(56,0,12,0,0)); fullToggle.setOnClickListener(v->toggleTimer()); close.setOnClickListener(v->dlg.dismiss()); dlg.setContentView(c); dlg.show(); Window w=dlg.getWindow(); if(w!=null) w.setLayout(-1,-1); }
+    private void fullscreen(){ Dialog dlg=new Dialog(this); dlg.requestWindowFeature(Window.FEATURE_NO_TITLE); LinearLayout c=new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setGravity(Gravity.CENTER); c.setPadding(dp(22),dp(22),dp(22),dp(22)); c.setBackgroundColor(Color.parseColor("#020617")); TextView brand=txt("SezR Focus Pro",26,"#facc15",true); brand.setGravity(Gravity.CENTER); c.addView(brand,m(0,0,0,28)); fullTimer=txt(format(seconds),84,"#ffffff",true); fullTimer.setGravity(Gravity.CENTER); c.addView(fullTimer,wrap()); fullStatus=txt(running?"Odak seansı çalışıyor":"Başlamak için hazır",18,"#cbd5e1",false); fullStatus.setGravity(Gravity.CENTER); fullStatus.setPadding(0,dp(12),0,dp(20)); c.addView(fullStatus,wrap()); TextView ms=txt("Atmosfer: "+musicMode,15,"#94a3b8",false); ms.setGravity(Gravity.CENTER); c.addView(ms,m(0,0,0,18)); fullToggle=primary(running?"Duraklat":"Başlat"); c.addView(fullToggle,height(56)); Button close=dark("Çık"); c.addView(close,h(56,0,12,0,0)); fullToggle.setOnClickListener(v->toggleTimer()); close.setOnClickListener(v->dlg.dismiss()); dlg.setContentView(c); dlg.show(); Window w=dlg.getWindow(); if(w!=null) w.setLayout(-1,-1); }
 
     private void renderTasks(){ taskBox.removeAllViews(); if(tasks.isEmpty()){ taskBox.addView(txt("Henüz görev eklenmedi.",15,"#cbd5e1",false),wrap()); return;} for(int i=0;i<tasks.size();i++){ final int ix=i; FocusTask t=tasks.get(i); LinearLayout r=row(); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(dp(10),dp(8),dp(10),dp(8)); r.setBackground(bg(t.done?"#10251a":"#0f172a",14,t.done?"#1f6f3a":"#263244")); TextView label=txt(t.text,15,t.done?"#86efac":"#e5e7eb",false); if(t.done) label.setPaintFlags(label.getPaintFlags()| Paint.STRIKE_THRU_TEXT_FLAG); r.addView(label,new LinearLayout.LayoutParams(0,-2,1)); Button done=dark(t.done?"Geri":"Tamam"), del=dark("Sil"); done.setTextSize(12); del.setTextSize(12); r.addView(done,new LinearLayout.LayoutParams(dp(82),dp(42))); LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(dp(58),dp(42)); p.setMargins(dp(6),0,0,0); r.addView(del,p); done.setOnClickListener(v->{tasks.get(ix).done=!tasks.get(ix).done; save(); renderTasks();}); del.setOnClickListener(v->{tasks.remove(ix); save(); renderTasks();}); taskBox.addView(r,m(0,0,0,8)); }}
     private void renderNotes(){ if(notes.isEmpty()){noteText.setText("Henüz not eklenmedi.");return;} StringBuilder sb=new StringBuilder(); for(String n:notes) sb.append("• ").append(n).append("\n"); noteText.setText(sb.toString()); }
 
-    private void updateAll(){ statMin.setText(minutes+" dk"); statSes.setText(String.valueOf(sessions)); targetText.setText(minutes+" / "+target+" dk"); percentText.setText("%"+(target==0?0:Math.min(100,Math.round(minutes*100f/target)))); updateWeekly(); updateProfile(); updateMusic(); updateExam(); }
-    private void updateTimer(){ timer.setText(format(seconds)); syncFull(); }
+    private void updateAll(){ if(statMin!=null)statMin.setText(minutes+" dk"); if(statSes!=null)statSes.setText(String.valueOf(sessions)); if(targetText!=null)targetText.setText(minutes+" / "+target+" dk"); if(percentText!=null)percentText.setText("%"+(target==0?0:Math.min(100,Math.round(minutes*100f/target)))); updateWeekly(); updateProfile(); updateMusic(); updateExam(); }
+    private void updateTimer(){ if(timer!=null)timer.setText(format(seconds)); syncFull(); }
     private void syncFull(){ if(fullTimer!=null) fullTimer.setText(format(seconds)); if(fullStatus!=null) fullStatus.setText(running?"Odak seansı çalışıyor":"Duraklatıldı"); if(fullToggle!=null) fullToggle.setText(running?"Duraklat":"Devam Et"); }
     private void updateProfile(){ if(profileText!=null) profileText.setText("Merhaba, "+profile+". Bugünkü odak alanın hazır."); }
     private void updateMusic(){ if(musicText!=null) musicText.setText("Seçili atmosfer: "+musicMode+"\nSes dosyası desteği sonraki sürümde eklenecek."); }
@@ -135,7 +205,7 @@ public class MainActivity extends Activity {
     private LinearLayout.LayoutParams m(int l,int t,int r,int b){ LinearLayout.LayoutParams p=wrap(); p.setMargins(dp(l),dp(t),dp(r),dp(b)); return p; }
     private LinearLayout.LayoutParams height(int h){ return new LinearLayout.LayoutParams(-1,dp(h)); }
     private LinearLayout.LayoutParams h(int h,int l,int t,int r,int b){ LinearLayout.LayoutParams p=height(h); p.setMargins(dp(l),dp(t),dp(r),dp(b)); return p; }
-    private LinearLayout.LayoutParams wb(){ LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(46),1); p.setMargins(dp(4),0,dp(4),0); return p; }
+    private LinearLayout.LayoutParams wb(){ LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(46),1); p.setMargins(dp(2),0,dp(2),0); return p; }
     private LinearLayout.LayoutParams wc(){ LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1); p.setMargins(dp(4),0,dp(4),0); return p; }
     private LinearLayout.LayoutParams center(){ LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-2,-2); p.gravity=Gravity.CENTER_HORIZONTAL; return p; }
     private int dp(int v){ return (int)(v*getResources().getDisplayMetrics().density+0.5f); }
