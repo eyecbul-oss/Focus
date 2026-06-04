@@ -110,6 +110,12 @@ tasks.register('patchMainActivityAiUi') {
     }
 }
 
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchMainActivityAiUi')
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     dependsOn tasks.named('patchMainActivityAiUi')
 }
