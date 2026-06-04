@@ -1,0 +1,46 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Keeps the large MainActivity stable while safely wiring the visible AI UI to AiStudyCoach during CI builds.
+tasks.register('patchMainActivityAiUi') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8')
+
+        String newAiMethods = '''    private void addAiPlanTasks() {
+        List<AiStudyCoach.PlanItem> plan = AiStudyCoach.buildPlan(minutes, target, daysToExamInt(), breakDuration);
+        for (AiStudyCoach.PlanItem item : plan) {
+            if (!"Mola".equals(item.category)) {
+                tasks.add(new FocusTask("AI Plan: " + item.title, false, item.category, item.minutes));
+            }
+        }
+        save();
+    }
+
+    private String aiPlanText() {
+        List<AiStudyCoach.PlanItem> plan = AiStudyCoach.buildPlan(minutes, target, daysToExamInt(), breakDuration);
+        return AiStudyCoach.shortPlanTitle(minutes, target, daysToExamInt()) + "\\n\\n" + AiStudyCoach.planText(plan);
+    }
+
+    private String aiAdvice() {
+        return AiStudyCoach.advice(minutes, target, openTaskCount(), daysToExamInt(), examName);
+    }'''
+
+        text = text.replaceFirst(/(?s)    private void addAiPlanTasks\(\) \{.*?\n    \}\n\n    private String aiPlanText\(\) \{.*?\n    \}\n\n    private String aiAdvice\(\) \{.*?\n    \}/, newAiMethods)
+
+        text = text.replace('c.addView(text("Yerel sıralama: #" + localRank() + " • Seviye: " + levelName(), 16, SUB, false), margins(0, 8, 0, 10));',
+                'c.addView(text(AiStudyCoach.motivationLine(minutes, target, sessions), 16, SUB, false), margins(0, 8, 0, 6));\n        c.addView(text("Yerel sıralama: #" + localRank() + " • Seviye: " + levelName(), 14, SUB, false), margins(0, 0, 0, 10));')
+
+        text = text.replace('c.addView(text(aiPlanText(), 15, SUB, false), margins(0, 8, 0, 12));',
+                'c.addView(text(aiPlanText(), 15, SUB, false), margins(0, 8, 0, 12));\n        c.addView(text(AiStudyCoach.reportSummary(minutes, target, sessions, weeklyTotal(), openTaskCount()), 13, SUB, false), margins(0, 0, 0, 12));')
+
+        text = text.replace('Button refresh = button("Kısa Takip Özeti Oluştur", GREEN);',
+                'Button refresh = button("AI Günlük Özeti Oluştur", GREEN);')
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchMainActivityAiUi')
+}
