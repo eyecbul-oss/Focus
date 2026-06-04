@@ -17,8 +17,13 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
     private static final String PREFS = "sezr_focus_pro_native";
@@ -28,8 +33,11 @@ public class MainActivity extends Activity {
     private int completedSessions = 0;
     private int completedMinutes = 0;
     private int dailyTarget = 60;
+    private String examName = "YKS";
+    private String examDate = "2026-06-20";
 
     private final List<FocusTask> tasks = new ArrayList<>();
+    private final List<String> notes = new ArrayList<>();
     private SharedPreferences prefs;
 
     private TextView timerText;
@@ -38,6 +46,8 @@ public class MainActivity extends Activity {
     private TextView statSessions;
     private TextView targetText;
     private TextView targetPercentText;
+    private TextView examInfoText;
+    private TextView noteListText;
     private LinearLayout taskContainer;
     private Button toggleButton;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -62,6 +72,14 @@ public class MainActivity extends Activity {
         }
     };
 
+    private final Runnable examTicker = new Runnable() {
+        @Override
+        public void run() {
+            updateExamCountdown();
+            handler.postDelayed(this, 60_000);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +95,24 @@ public class MainActivity extends Activity {
         root.setPadding(dp(18), dp(26), dp(18), dp(26));
         scroll.addView(root, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        root.addView(buildHeader(), matchWrapMargin(0, 0, 0, dp(14)));
+        root.addView(buildTimerCard(), matchWrapMargin(0, 0, 0, dp(14)));
+        root.addView(buildStatsRow(), matchWrapMargin(0, 0, 0, dp(14)));
+        root.addView(buildTargetCard(), matchWrapMargin(0, 0, 0, dp(14)));
+        root.addView(buildTaskCard(), matchWrapMargin(0, 0, 0, dp(14)));
+        root.addView(buildExamCard(), matchWrapMargin(0, 0, 0, dp(14)));
+        root.addView(buildNotesCard(), matchWrap());
+
+        updateTimer();
+        updateStats();
+        renderTasks();
+        renderNotes();
+        updateExamCountdown();
+        handler.post(examTicker);
+        setContentView(scroll);
+    }
+
+    private LinearLayout buildHeader() {
         LinearLayout header = card();
         header.setGravity(Gravity.CENTER_HORIZONTAL);
         header.setPadding(dp(18), dp(18), dp(18), dp(18));
@@ -87,8 +123,10 @@ public class MainActivity extends Activity {
         subtitle.setGravity(Gravity.CENTER);
         subtitle.setPadding(0, dp(8), 0, 0);
         header.addView(subtitle, matchWrap());
-        root.addView(header, matchWrapMargin(0, 0, 0, dp(14)));
+        return header;
+    }
 
+    private LinearLayout buildTimerCard() {
         LinearLayout timerCard = card();
         timerCard.setGravity(Gravity.CENTER_HORIZONTAL);
         timerCard.setPadding(dp(18), dp(22), dp(18), dp(22));
@@ -116,26 +154,20 @@ public class MainActivity extends Activity {
         timerCard.addView(toggleButton, matchHeight(dp(54)));
         Button resetButton = darkButton("Sıfırla");
         timerCard.addView(resetButton, matchHeightMargin(dp(54), 0, dp(10), 0, 0));
-        root.addView(timerCard, matchWrapMargin(0, 0, 0, dp(14)));
 
+        toggleButton.setOnClickListener(v -> toggleTimer());
+        resetButton.setOnClickListener(v -> resetTimer());
+        return timerCard;
+    }
+
+    private LinearLayout buildStatsRow() {
         LinearLayout stats = new LinearLayout(this);
         stats.setOrientation(LinearLayout.HORIZONTAL);
         statMinutes = statCard("0 dk", "Bugünkü çalışma");
         statSessions = statCard("0", "Tamamlanan seans");
         stats.addView((LinearLayout) statMinutes.getParent(), weightCard());
         stats.addView((LinearLayout) statSessions.getParent(), weightCard());
-        root.addView(stats, matchWrapMargin(0, 0, 0, dp(14)));
-
-        root.addView(buildTargetCard(), matchWrapMargin(0, 0, 0, dp(14)));
-        root.addView(buildTaskCard(), matchWrap());
-
-        toggleButton.setOnClickListener(v -> toggleTimer());
-        resetButton.setOnClickListener(v -> resetTimer());
-
-        updateTimer();
-        updateStats();
-        renderTasks();
-        setContentView(scroll);
+        return stats;
     }
 
     private LinearLayout buildTargetCard() {
@@ -162,23 +194,14 @@ public class MainActivity extends Activity {
         LinearLayout taskCard = card();
         taskCard.setPadding(dp(18), dp(18), dp(18), dp(18));
         taskCard.addView(text("Bugünkü görevler", 22, "#facc15", true), matchWrap());
-
-        EditText taskInput = new EditText(this);
-        taskInput.setHint("Örn. 30 problem çöz");
-        taskInput.setHintTextColor(Color.parseColor("#64748b"));
-        taskInput.setTextColor(Color.WHITE);
-        taskInput.setSingleLine(true);
-        taskInput.setBackground(panelBg("#0f172a", dp(14), "#263244"));
-        taskInput.setPadding(dp(14), 0, dp(14), 0);
+        EditText taskInput = input("Örn. 30 problem çöz");
         taskCard.addView(taskInput, matchHeightMargin(dp(52), 0, dp(14), 0, dp(10)));
-
         Button addTask = primaryButton("Görev Ekle");
         taskCard.addView(addTask, matchHeight(dp(52)));
         taskContainer = new LinearLayout(this);
         taskContainer.setOrientation(LinearLayout.VERTICAL);
         taskContainer.setPadding(0, dp(14), 0, 0);
         taskCard.addView(taskContainer, matchWrap());
-
         Button clearDone = darkButton("Tamamlananları Temizle");
         taskCard.addView(clearDone, matchHeightMargin(dp(52), 0, dp(12), 0, 0));
 
@@ -196,6 +219,62 @@ public class MainActivity extends Activity {
             renderTasks();
         });
         return taskCard;
+    }
+
+    private LinearLayout buildExamCard() {
+        LinearLayout examCard = card();
+        examCard.setPadding(dp(18), dp(18), dp(18), dp(18));
+        examCard.addView(text("Sınav Sayacı", 22, "#facc15", true), matchWrap());
+        TextView helper = text("Tarih formatı: 2026-06-20", 13, "#94a3b8", false);
+        helper.setPadding(0, dp(6), 0, dp(12));
+        examCard.addView(helper, matchWrap());
+        EditText nameInput = input("Sınav adı: YKS / LGS / KPSS");
+        nameInput.setText(examName);
+        examCard.addView(nameInput, matchHeightMargin(dp(52), 0, 0, 0, dp(10)));
+        EditText dateInput = input("Tarih: yyyy-MM-dd");
+        dateInput.setText(examDate);
+        examCard.addView(dateInput, matchHeightMargin(dp(52), 0, 0, 0, dp(10)));
+        Button saveExam = primaryButton("Sınavı Kaydet");
+        examCard.addView(saveExam, matchHeight(dp(52)));
+        examInfoText = text("Sınav bilgisi yükleniyor.", 17, "#dbeafe", false);
+        examInfoText.setPadding(0, dp(14), 0, 0);
+        examCard.addView(examInfoText, matchWrap());
+        saveExam.setOnClickListener(v -> {
+            examName = nameInput.getText().toString().trim().length() == 0 ? "Sınav" : nameInput.getText().toString().trim();
+            examDate = dateInput.getText().toString().trim();
+            saveState();
+            updateExamCountdown();
+        });
+        return examCard;
+    }
+
+    private LinearLayout buildNotesCard() {
+        LinearLayout notesCard = card();
+        notesCard.setPadding(dp(18), dp(18), dp(18), dp(18));
+        notesCard.addView(text("Notlar", 22, "#facc15", true), matchWrap());
+        EditText noteInput = input("Kısa not ekle");
+        notesCard.addView(noteInput, matchHeightMargin(dp(52), 0, dp(14), 0, dp(10)));
+        Button addNote = primaryButton("Not Ekle");
+        notesCard.addView(addNote, matchHeight(dp(52)));
+        Button clearNotes = darkButton("Notları Temizle");
+        notesCard.addView(clearNotes, matchHeightMargin(dp(52), 0, dp(10), 0, 0));
+        noteListText = text("Henüz not eklenmedi.", 15, "#cbd5e1", false);
+        noteListText.setPadding(0, dp(14), 0, 0);
+        notesCard.addView(noteListText, matchWrap());
+        addNote.setOnClickListener(v -> {
+            String value = noteInput.getText().toString().trim();
+            if (value.length() == 0) return;
+            notes.add(value);
+            noteInput.setText("");
+            saveState();
+            renderNotes();
+        });
+        clearNotes.setOnClickListener(v -> {
+            notes.clear();
+            saveState();
+            renderNotes();
+        });
+        return notesCard;
     }
 
     private void toggleTimer() {
@@ -245,8 +324,7 @@ public class MainActivity extends Activity {
     private void renderTasks() {
         taskContainer.removeAllViews();
         if (tasks.isEmpty()) {
-            TextView empty = text("Henüz görev eklenmedi.", 15, "#cbd5e1", false);
-            taskContainer.addView(empty, matchWrap());
+            taskContainer.addView(text("Henüz görev eklenmedi.", 15, "#cbd5e1", false), matchWrap());
             return;
         }
         for (int i = 0; i < tasks.size(); i++) {
@@ -257,21 +335,17 @@ public class MainActivity extends Activity {
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(dp(10), dp(8), dp(10), dp(8));
             row.setBackground(panelBg(task.done ? "#10251a" : "#0f172a", dp(14), task.done ? "#1f6f3a" : "#263244"));
-
             TextView label = text(task.text, 15, task.done ? "#86efac" : "#e5e7eb", false);
             if (task.done) label.setPaintFlags(label.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             row.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-
             Button done = darkButton(task.done ? "Geri" : "Tamam");
             done.setTextSize(12);
             row.addView(done, new LinearLayout.LayoutParams(dp(82), dp(42)));
-
             Button del = darkButton("Sil");
             del.setTextSize(12);
             LinearLayout.LayoutParams delParams = new LinearLayout.LayoutParams(dp(58), dp(42));
             delParams.setMargins(dp(6), 0, 0, 0);
             row.addView(del, delParams);
-
             done.setOnClickListener(v -> {
                 tasks.get(index).done = !tasks.get(index).done;
                 saveState();
@@ -282,8 +356,37 @@ public class MainActivity extends Activity {
                 saveState();
                 renderTasks();
             });
-
             taskContainer.addView(row, matchWrapMargin(0, 0, 0, dp(8)));
+        }
+    }
+
+    private void renderNotes() {
+        if (noteListText == null) return;
+        if (notes.isEmpty()) {
+            noteListText.setText("Henüz not eklenmedi.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String note : notes) sb.append("• ").append(note).append("\n");
+        noteListText.setText(sb.toString());
+    }
+
+    private void updateExamCountdown() {
+        if (examInfoText == null) return;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            Date target = sdf.parse(examDate);
+            if (target == null) throw new ParseException("empty", 0);
+            long diff = target.getTime() - System.currentTimeMillis();
+            if (diff <= 0) {
+                examInfoText.setText(examName + " tarihi geçti veya bugün.");
+                return;
+            }
+            long days = TimeUnit.MILLISECONDS.toDays(diff);
+            long hours = TimeUnit.MILLISECONDS.toHours(diff) % 24;
+            examInfoText.setText(examName + " için kalan süre: " + days + " gün " + hours + " saat");
+        } catch (Exception e) {
+            examInfoText.setText("Tarih okunamadı. Örnek: 2026-06-20");
         }
     }
 
@@ -303,36 +406,49 @@ public class MainActivity extends Activity {
         completedSessions = prefs.getInt("sessions", 0);
         completedMinutes = prefs.getInt("minutes", 0);
         dailyTarget = prefs.getInt("target", 60);
-        String raw = prefs.getString("tasks", "");
+        examName = prefs.getString("exam_name", "YKS");
+        examDate = prefs.getString("exam_date", "2026-06-20");
         tasks.clear();
-        if (raw != null && raw.length() > 0) {
-            String[] rows = raw.split("\\n");
-            for (String row : rows) {
+        String rawTasks = prefs.getString("tasks", "");
+        if (rawTasks != null && rawTasks.length() > 0) {
+            for (String row : rawTasks.split("\\n")) {
                 if (row.trim().length() == 0) continue;
                 boolean done = row.startsWith("1|");
                 String text = row.length() > 2 ? row.substring(2) : "Görev";
                 tasks.add(new FocusTask(text, done));
             }
         }
+        notes.clear();
+        String rawNotes = prefs.getString("notes", "");
+        if (rawNotes != null && rawNotes.length() > 0) {
+            for (String row : rawNotes.split("\\n")) if (row.trim().length() > 0) notes.add(row.trim());
+        }
     }
 
     private void saveState() {
-        StringBuilder sb = new StringBuilder();
-        for (FocusTask task : tasks) {
-            sb.append(task.done ? "1|" : "0|").append(task.text.replace("\n", " ")).append("\n");
-        }
+        StringBuilder taskBuilder = new StringBuilder();
+        for (FocusTask task : tasks) taskBuilder.append(task.done ? "1|" : "0|").append(clean(task.text)).append("\n");
+        StringBuilder noteBuilder = new StringBuilder();
+        for (String note : notes) noteBuilder.append(clean(note)).append("\n");
         prefs.edit()
                 .putInt("sessions", completedSessions)
                 .putInt("minutes", completedMinutes)
                 .putInt("target", dailyTarget)
-                .putString("tasks", sb.toString())
+                .putString("exam_name", examName)
+                .putString("exam_date", examDate)
+                .putString("tasks", taskBuilder.toString())
+                .putString("notes", noteBuilder.toString())
                 .apply();
+    }
+
+    private String clean(String value) {
+        return value.replace("\n", " ").replace("|", " ");
     }
 
     private String format(int totalSeconds) {
         int m = totalSeconds / 60;
         int s = totalSeconds % 60;
-        return String.format("%02d:%02d", m, s);
+        return String.format(Locale.US, "%02d:%02d", m, s);
     }
 
     private LinearLayout card() {
@@ -349,6 +465,17 @@ public class MainActivity extends Activity {
         tv.setTextColor(Color.parseColor(color));
         if (bold) tv.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         return tv;
+    }
+
+    private EditText input(String hint) {
+        EditText edit = new EditText(this);
+        edit.setHint(hint);
+        edit.setHintTextColor(Color.parseColor("#64748b"));
+        edit.setTextColor(Color.WHITE);
+        edit.setSingleLine(true);
+        edit.setBackground(panelBg("#0f172a", dp(14), "#263244"));
+        edit.setPadding(dp(14), 0, dp(14), 0);
+        return edit;
     }
 
     private TextView pill(String value) {
@@ -442,6 +569,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         handler.removeCallbacks(ticker);
+        handler.removeCallbacks(examTicker);
         saveState();
         super.onDestroy();
     }
