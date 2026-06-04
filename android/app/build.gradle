@@ -10,7 +10,7 @@ android {
         applicationId 'com.sezr.focuspro.nativeapp'
         minSdk 23
         targetSdk 35
-        versionCode 8
-        versionName '1.0.7-oneui-polish'
+        versionCode 9
+        versionName '1.0.8-oneui-visible'
     }
 }
