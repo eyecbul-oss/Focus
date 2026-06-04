@@ -4,6 +4,8 @@
         android:allowBackup="true"
         android:theme="@style/AppTheme"
         android:label="SezR Focus Pro"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:resizeableActivity="true">
         <activity
             android:name=".MainActivity"
