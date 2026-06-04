@@ -14,17 +14,17 @@ public final class FocusProgressCardFactory {
     public static LinearLayout create(Context context, int completedMinutes, int completedSessions) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(context, 18), dp(context, 18), dp(context, 18), dp(context, 18));
-        card.setBackground(bg(context, "#111827", 24, "#243041"));
+        card.setPadding(dp(context, 16), dp(context, 16), dp(context, 16), dp(context, 16));
+        card.setBackground(bg(context, "#FFFFFF", 26, "#E7EAF3"));
 
-        TextView title = text(context, "Seviye / Rozetler", 22, "#facc15", true);
+        TextView title = text(context, "Seviye / Rozetler", 20, "#172033", true);
         card.addView(title, matchWrap());
 
-        TextView level = text(context, "Seviye: " + FocusLevelRules.levelName(completedMinutes), 18, "#ffffff", true);
+        TextView level = text(context, "Seviye: " + FocusLevelRules.levelName(completedMinutes), 17, "#4F46E5", true);
         level.setPadding(0, dp(context, 10), 0, dp(context, 8));
         card.addView(level, matchWrap());
 
-        TextView badges = text(context, FocusLevelRules.badges(completedMinutes, completedSessions), 15, "#dbeafe", false);
+        TextView badges = text(context, FocusLevelRules.badges(completedMinutes, completedSessions), 14, "#5F6B7A", false);
         card.addView(badges, matchWrap());
 
         return card;
