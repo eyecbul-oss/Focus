@@ -7,6 +7,68 @@ tasks.register('patchMainActivityAiUi') {
         if (!file.exists()) return
         String text = file.getText('UTF-8')
 
+        if (!text.contains('import android.os.Build;')) {
+            text = text.replace('import android.os.Bundle;\n', 'import android.os.Bundle;\nimport android.os.Build;\n')
+        }
+        if (!text.contains('import android.view.ViewGroup;')) {
+            text = text.replace('import android.view.Window;\n', 'import android.view.View;\nimport android.view.ViewGroup;\nimport android.view.Window;\n')
+        }
+
+        String rootBlock = '''        LinearLayout root = column();
+        root.setPadding(dp(18), dp(24), dp(18), dp(10));
+        root.setBackgroundColor(Color.parseColor(BG));'''
+        String polishedRootBlock = '''        LinearLayout root = column();
+        root.setPadding(dp(18), dp(24), dp(18), dp(10));
+        root.setClipToPadding(false);
+        root.setBackgroundColor(Color.parseColor(BG));'''
+        if (!text.contains('root.setClipToPadding(false);')) {
+            text = text.replace(rootBlock, polishedRootBlock)
+        }
+
+        String navBlock = '''        navBar = navBar();
+        root.addView(navBar, margins(0, 8, 0, 12));
+        setContentView(root);'''
+        String polishedNavBlock = '''        navBar = navBar();
+        root.addView(navBar, margins(0, 8, 0, 12));
+        configureSystemBars(root);
+        setContentView(root);'''
+        if (!text.contains('configureSystemBars(root);')) {
+            text = text.replace(navBlock, polishedNavBlock)
+        }
+
+        if (!text.contains('private void configureSystemBars(LinearLayout root)')) {
+            String systemBarMethod = '''    private void configureSystemBars(LinearLayout root) {
+        Window window = getWindow();
+        window.setStatusBarColor(Color.TRANSPARENT);
+        window.setNavigationBarColor(Color.parseColor(BG));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            }
+            window.getDecorView().setSystemUiVisibility(flags);
+        }
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
+            int statusBar = insets.getSystemWindowInsetTop();
+            int navigationBar = insets.getSystemWindowInsetBottom();
+            view.setPadding(dp(18), Math.max(dp(18), statusBar + dp(8)), dp(18), dp(10));
+            if (content != null) {
+                content.setPadding(0, 0, 0, Math.max(dp(24), navigationBar + dp(18)));
+            }
+            if (navBar != null) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) navBar.getLayoutParams();
+                params.bottomMargin = Math.max(dp(12), navigationBar + dp(12));
+                navBar.setLayoutParams(params);
+            }
+            return insets;
+        });
+        root.post(() -> root.requestApplyInsets());
+    }
+
+'''
+            text = text.replace('    private void show(int tab) {\n', systemBarMethod + '    private void show(int tab) {\n')
+        }
+
         String newAiMethods = '''    private void addAiPlanTasks() {
         List<AiStudyCoach.PlanItem> plan = AiStudyCoach.buildPlan(minutes, target, daysToExamInt(), breakDuration);
         for (AiStudyCoach.PlanItem item : plan) {
@@ -28,14 +90,14 @@ tasks.register('patchMainActivityAiUi') {
 
         text = text.replaceFirst(/(?s)    private void addAiPlanTasks\(\) \{.*?\n    \}\n\n    private String aiPlanText\(\) \{.*?\n    \}\n\n    private String aiAdvice\(\) \{.*?\n    \}/, newAiMethods)
 
-        text = text.replace('c.addView(text("Yerel sıralama: #" + localRank() + " • Seviye: " + levelName(), 16, SUB, false), margins(0, 8, 0, 10));',
-                'c.addView(text(AiStudyCoach.motivationLine(minutes, target, sessions), 16, SUB, false), margins(0, 8, 0, 6));\n        c.addView(text("Yerel sıralama: #" + localRank() + " • Seviye: " + levelName(), 14, SUB, false), margins(0, 0, 0, 10));')
+        text = text.replace('c.addView(text("Yerel s\u0131ralama: #" + localRank() + " \u2022 Seviye: " + levelName(), 16, SUB, false), margins(0, 8, 0, 10));',
+                'c.addView(text(AiStudyCoach.motivationLine(minutes, target, sessions), 16, SUB, false), margins(0, 8, 0, 6));\n        c.addView(text("Yerel s\u0131ralama: #" + localRank() + " \u2022 Seviye: " + levelName(), 14, SUB, false), margins(0, 0, 0, 10));')
 
         text = text.replace('c.addView(text(aiPlanText(), 15, SUB, false), margins(0, 8, 0, 12));',
                 'c.addView(text(aiPlanText(), 15, SUB, false), margins(0, 8, 0, 12));\n        c.addView(text(AiStudyCoach.reportSummary(minutes, target, sessions, weeklyTotal(), openTaskCount()), 13, SUB, false), margins(0, 0, 0, 12));')
 
-        text = text.replace('Button refresh = button("Kısa Takip Özeti Oluştur", GREEN);',
-                'Button refresh = button("AI Günlük Özeti Oluştur", GREEN);')
+        text = text.replace('Button refresh = button("K\u0131sa Takip \u00d6zeti Olu\u015ftur", GREEN);',
+                'Button refresh = button("AI G\u00fcnl\u00fck \u00d6zeti Olu\u015ftur", GREEN);')
 
         file.setText(text, 'UTF-8')
     }
