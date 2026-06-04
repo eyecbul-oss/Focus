@@ -1,6 +1,7 @@
 package com.sezr.focuspro;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -20,6 +22,7 @@ import android.widget.TextView;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +38,7 @@ public class MainActivity extends Activity {
     private int dailyTarget = 60;
     private String examName = "YKS";
     private String examDate = "2026-06-20";
+    private final int[] weekMinutes = new int[7];
 
     private final List<FocusTask> tasks = new ArrayList<>();
     private final List<String> notes = new ArrayList<>();
@@ -48,8 +52,12 @@ public class MainActivity extends Activity {
     private TextView targetPercentText;
     private TextView examInfoText;
     private TextView noteListText;
+    private TextView weeklyText;
+    private TextView fullscreenTimerText;
+    private TextView fullscreenStatusText;
     private LinearLayout taskContainer;
     private Button toggleButton;
+    private Button fullscreenToggleButton;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private final Runnable ticker = new Runnable() {
@@ -63,7 +71,9 @@ public class MainActivity extends Activity {
             } else {
                 running = false;
                 completedSessions++;
-                completedMinutes += focusDuration / 60;
+                int earned = focusDuration / 60;
+                completedMinutes += earned;
+                weekMinutes[todayIndex()] += earned;
                 toggleButton.setText("Başlat");
                 statusText.setText("Seans tamamlandı. Kısa bir mola ver.");
                 saveState();
@@ -99,6 +109,7 @@ public class MainActivity extends Activity {
         root.addView(buildTimerCard(), matchWrapMargin(0, 0, 0, dp(14)));
         root.addView(buildStatsRow(), matchWrapMargin(0, 0, 0, dp(14)));
         root.addView(buildTargetCard(), matchWrapMargin(0, 0, 0, dp(14)));
+        root.addView(buildWeeklyCard(), matchWrapMargin(0, 0, 0, dp(14)));
         root.addView(buildTaskCard(), matchWrapMargin(0, 0, 0, dp(14)));
         root.addView(buildExamCard(), matchWrapMargin(0, 0, 0, dp(14)));
         root.addView(buildNotesCard(), matchWrap());
@@ -154,9 +165,12 @@ public class MainActivity extends Activity {
         timerCard.addView(toggleButton, matchHeight(dp(54)));
         Button resetButton = darkButton("Sıfırla");
         timerCard.addView(resetButton, matchHeightMargin(dp(54), 0, dp(10), 0, 0));
+        Button fullscreenButton = darkButton("Tam Ekran Odak Modu");
+        timerCard.addView(fullscreenButton, matchHeightMargin(dp(54), 0, dp(10), 0, 0));
 
         toggleButton.setOnClickListener(v -> toggleTimer());
         resetButton.setOnClickListener(v -> resetTimer());
+        fullscreenButton.setOnClickListener(v -> showFullscreenFocus());
         return timerCard;
     }
 
@@ -188,6 +202,16 @@ public class MainActivity extends Activity {
         targetButtons.addView(targetButton("90 dk", 90), weightButton());
         targetCard.addView(targetButtons, matchWrap());
         return targetCard;
+    }
+
+    private LinearLayout buildWeeklyCard() {
+        LinearLayout weeklyCard = card();
+        weeklyCard.setPadding(dp(18), dp(18), dp(18), dp(18));
+        weeklyCard.addView(text("Haftalık Özet", 22, "#facc15", true), matchWrap());
+        weeklyText = text("Haftalık veri hazırlanıyor.", 15, "#dbeafe", false);
+        weeklyText.setPadding(0, dp(10), 0, 0);
+        weeklyCard.addView(weeklyText, matchWrap());
+        return weeklyCard;
     }
 
     private LinearLayout buildTaskCard() {
@@ -288,6 +312,7 @@ public class MainActivity extends Activity {
             statusText.setText("Duraklatıldı");
             handler.removeCallbacks(ticker);
         }
+        syncFullscreenText();
     }
 
     private void resetTimer() {
@@ -319,6 +344,48 @@ public class MainActivity extends Activity {
             updateStats();
         });
         return button;
+    }
+
+    private void showFullscreenFocus() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER);
+        box.setPadding(dp(22), dp(22), dp(22), dp(22));
+        box.setBackgroundColor(Color.parseColor("#020617"));
+
+        TextView brand = text("SezR Focus Pro", 26, "#facc15", true);
+        brand.setGravity(Gravity.CENTER);
+        box.addView(brand, matchWrapMargin(0, 0, 0, dp(28)));
+
+        fullscreenTimerText = text(format(seconds), 84, "#ffffff", true);
+        fullscreenTimerText.setGravity(Gravity.CENTER);
+        box.addView(fullscreenTimerText, matchWrap());
+
+        fullscreenStatusText = text(running ? "Odak seansı çalışıyor" : "Başlamak için hazır", 18, "#cbd5e1", false);
+        fullscreenStatusText.setGravity(Gravity.CENTER);
+        fullscreenStatusText.setPadding(0, dp(12), 0, dp(28));
+        box.addView(fullscreenStatusText, matchWrap());
+
+        fullscreenToggleButton = primaryButton(running ? "Duraklat" : "Başlat");
+        box.addView(fullscreenToggleButton, matchHeight(dp(56)));
+        Button close = darkButton("Çık");
+        box.addView(close, matchHeightMargin(dp(56), 0, dp(12), 0, 0));
+
+        fullscreenToggleButton.setOnClickListener(v -> toggleTimer());
+        close.setOnClickListener(v -> dialog.dismiss());
+        dialog.setContentView(box);
+        if (dialog.getWindow() != null) dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+    }
+
+    private void syncFullscreenText() {
+        if (fullscreenTimerText != null) fullscreenTimerText.setText(format(seconds));
+        if (fullscreenStatusText != null) fullscreenStatusText.setText(running ? "Odak seansı çalışıyor" : "Duraklatıldı");
+        if (fullscreenToggleButton != null) fullscreenToggleButton.setText(running ? "Duraklat" : "Devam Et");
     }
 
     private void renderTasks() {
@@ -392,6 +459,7 @@ public class MainActivity extends Activity {
 
     private void updateTimer() {
         timerText.setText(format(seconds));
+        syncFullscreenText();
     }
 
     private void updateStats() {
@@ -400,6 +468,26 @@ public class MainActivity extends Activity {
         targetText.setText(completedMinutes + " / " + dailyTarget + " dk");
         int pct = dailyTarget == 0 ? 0 : Math.min(100, Math.round(completedMinutes * 100f / dailyTarget));
         targetPercentText.setText("%" + pct);
+        updateWeeklyText();
+    }
+
+    private void updateWeeklyText() {
+        if (weeklyText == null) return;
+        String[] names = {"Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"};
+        int total = 0;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 7; i++) {
+            total += weekMinutes[i];
+            sb.append(names[i]).append(": ").append(weekMinutes[i]).append(" dk");
+            if (i < 6) sb.append("\n");
+        }
+        sb.append("\n\nHaftalık toplam: ").append(total).append(" dk");
+        weeklyText.setText(sb.toString());
+    }
+
+    private int todayIndex() {
+        int day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+        return day == Calendar.SUNDAY ? 6 : day - 2;
     }
 
     private void loadState() {
@@ -408,6 +496,7 @@ public class MainActivity extends Activity {
         dailyTarget = prefs.getInt("target", 60);
         examName = prefs.getString("exam_name", "YKS");
         examDate = prefs.getString("exam_date", "2026-06-20");
+        for (int i = 0; i < 7; i++) weekMinutes[i] = prefs.getInt("week_" + i, 0);
         tasks.clear();
         String rawTasks = prefs.getString("tasks", "");
         if (rawTasks != null && rawTasks.length() > 0) {
@@ -430,15 +519,16 @@ public class MainActivity extends Activity {
         for (FocusTask task : tasks) taskBuilder.append(task.done ? "1|" : "0|").append(clean(task.text)).append("\n");
         StringBuilder noteBuilder = new StringBuilder();
         for (String note : notes) noteBuilder.append(clean(note)).append("\n");
-        prefs.edit()
+        SharedPreferences.Editor editor = prefs.edit()
                 .putInt("sessions", completedSessions)
                 .putInt("minutes", completedMinutes)
                 .putInt("target", dailyTarget)
                 .putString("exam_name", examName)
                 .putString("exam_date", examDate)
                 .putString("tasks", taskBuilder.toString())
-                .putString("notes", noteBuilder.toString())
-                .apply();
+                .putString("notes", noteBuilder.toString());
+        for (int i = 0; i < 7; i++) editor.putInt("week_" + i, weekMinutes[i]);
+        editor.apply();
     }
 
     private String clean(String value) {
