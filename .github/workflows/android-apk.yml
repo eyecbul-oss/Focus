@@ -34,5 +34,5 @@ jobs:
       - name: Upload native APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SezR-Focus-Pro-1.0.9-dashboard-redesign-debug-apk
+          name: SezR-Focus-Pro-1.1.0-ai-coach-reports-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
