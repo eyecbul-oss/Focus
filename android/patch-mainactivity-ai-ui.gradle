@@ -5,7 +5,7 @@ tasks.register('patchMainActivityAiUi') {
     doLast {
         File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
         if (!file.exists()) return
-        String text = file.getText('UTF-8')
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
 
         if (!text.contains('import android.os.Build;')) {
             text = text.replace('import android.os.Bundle;\n', 'import android.os.Bundle;\nimport android.os.Build;\n')
@@ -49,15 +49,15 @@ tasks.register('patchMainActivityAiUi') {
             window.getDecorView().setSystemUiVisibility(flags);
         }
         root.setOnApplyWindowInsetsListener((view, insets) -> {
-            int statusBar = insets.getSystemWindowInsetTop();
-            int navigationBar = insets.getSystemWindowInsetBottom();
+            int statusBar = Math.max(insets.getSystemWindowInsetTop(), dp(24));
+            int navigationBar = Math.max(insets.getSystemWindowInsetBottom(), dp(48));
             view.setPadding(dp(18), Math.max(dp(18), statusBar + dp(8)), dp(18), dp(10));
             if (content != null) {
-                content.setPadding(0, 0, 0, Math.max(dp(24), navigationBar + dp(18)));
+                content.setPadding(0, 0, 0, Math.max(dp(32), navigationBar + dp(24)));
             }
             if (navBar != null) {
                 ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) navBar.getLayoutParams();
-                params.bottomMargin = Math.max(dp(12), navigationBar + dp(12));
+                params.bottomMargin = navigationBar + dp(18);
                 navBar.setLayoutParams(params);
             }
             return insets;
@@ -98,6 +98,13 @@ tasks.register('patchMainActivityAiUi') {
 
         text = text.replace('Button refresh = button("K\u0131sa Takip \u00d6zeti Olu\u015ftur", GREEN);',
                 'Button refresh = button("AI G\u00fcnl\u00fck \u00d6zeti Olu\u015ftur", GREEN);')
+
+        if (!text.contains('configureSystemBars(root);') || !text.contains('private void configureSystemBars(LinearLayout root)')) {
+            throw new GradleException('MainActivity system bar patch was not applied')
+        }
+        if (!text.contains('AiStudyCoach.advice(minutes, target, openTaskCount(), daysToExamInt(), examName)')) {
+            throw new GradleException('MainActivity AI coach patch was not applied')
+        }
 
         file.setText(text, 'UTF-8')
     }
