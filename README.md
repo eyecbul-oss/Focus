@@ -38,12 +38,14 @@ android/app/build/outputs/apk/debug/app-debug.apk
 
 ## Cihazda Test
 
+Debug build, mevcut kurulu uygulamanın üstüne yazmaz. `applicationIdSuffix '.debug'` kullandığı için telefona ayrı paket olarak kurulur ve kullanıcı verisini silmeden QA yapılabilir.
+
 ```bash
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -n com.sezr.focuspro.nativeapp/com.sezr.focuspro.MainActivity
+adb shell am start -n com.sezr.focuspro.nativeapp.debug/com.sezr.focuspro.MainActivity
 ```
 
-Mevcut kurulu uygulama farklı imzayla yüklendiyse Android üstüne kurmayı reddeder. Bu durumda uygulamayı kaldırmadan önce veri kaybı ihtimalini değerlendirin.
+Release veya daha önce farklı imzayla kurulmuş üretim uygulamasını test ederken veriyi korumak için önce debug paketle yan yana test edin. Üretim paketini kaldırmak kullanıcı verisini silebilir.
 
 ## Profesyonelleştirme Yol Haritası
 
