@@ -13,4 +13,11 @@ android {
         versionCode 18
         versionName '1.1.7-professional-ui'
     }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+    }
 }
