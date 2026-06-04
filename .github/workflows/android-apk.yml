@@ -34,5 +34,5 @@ jobs:
       - name: Upload native APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SezR-Focus-Pro-1.1.2-study-coach-dev-debug-apk
+          name: SezR-Focus-Pro-1.1.3-layout-fix-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
