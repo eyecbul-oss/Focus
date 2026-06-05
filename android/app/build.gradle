@@ -10,7 +10,7 @@ android {
         applicationId 'com.sezr.focuspro.nativeapp'
         minSdk 23
         targetSdk 35
-        versionCode 20
-        versionName '1.1.9-compact-home'
+        versionCode 21
+        versionName '1.2.0-compact-profile-dialog'
     }
 }
