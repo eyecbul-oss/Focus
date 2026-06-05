@@ -69,7 +69,6 @@ tasks.register('patchMainActivityAiUi') {
             text = text.replace('    private void show(int tab) {\n', systemBarMethod + '    private void show(int tab) {\n')
         }
 
-        // If the method already exists from an older patch, tune the excessive bottom spacing.
         text = text.replace('content.setPadding(0, 0, 0, Math.max(dp(32), navigationBar + dp(24)));',
                 'content.setPadding(0, 0, 0, Math.max(dp(24), navigationBar + dp(12)));')
         text = text.replace('params.bottomMargin = navigationBar + dp(18);',
@@ -82,29 +81,17 @@ tasks.register('patchMainActivityAiUi') {
         content.addView(homeQuickSettingsCard(), margins(0, 0, 0, 16));'''
         text = text.replace(oldHome, newHome)
 
-        if (!text.contains('private LinearLayout homeQuickSettingsCard()')) {
-            String quickSettings = '''    private LinearLayout homeQuickSettingsCard() {
+        String compactQuickSettings = '''    private LinearLayout homeQuickSettingsCard() {
         LinearLayout c = card();
         LinearLayout top = row();
         LinearLayout left = column();
         left.addView(text("Profil & Hızlı Ayar", 20, TEXT, true), wrap());
-        left.addView(text("Hedef, ses ve kullanıcı seçimini buradan yönet", 14, SUB, false), margins(0, 4, 0, 0));
+        left.addView(text("Hedef ve ses ayarını hızlı yönet", 14, SUB, false), margins(0, 4, 0, 0));
         top.addView(left, new LinearLayout.LayoutParams(0, -2, 1));
-        top.addView(pill(profile, LILAC), fixed(110, 42));
+        Button profileBtn = button(profile, LILAC);
+        top.addView(profileBtn, fixed(116, 46));
         c.addView(top, margins(0, 0, 0, 12));
 
-        EditText input = input("Adını yaz veya misafir kal");
-        if (!"Misafir".equals(profile)) input.setText(profile);
-        c.addView(input, heightMargins(50, 0, 0, 0, 8));
-
-        LinearLayout profileRow = buttonRow();
-        Button guest = softButton("Misafir");
-        Button saveBtn = button("Kaydet", YELLOW2);
-        profileRow.addView(guest, buttonCell());
-        profileRow.addView(saveBtn, buttonCell());
-        c.addView(profileRow, heightMargins(52, 0, 0, 0, 10));
-
-        c.addView(text("Günlük hedef", 14, TEXT, true), margins(0, 0, 0, 8));
         LinearLayout goals = buttonRow();
         goals.addView(targetButton("30", 30), buttonCell());
         goals.addView(targetButton("60", 60), buttonCell());
@@ -114,20 +101,59 @@ tasks.register('patchMainActivityAiUi') {
 
         LinearLayout actions = buttonRow();
         Button sound = button(soundOn ? "Ses: Açık" : "Ses: Kapalı", BLUE);
-        Button reset = button("Verileri Sıfırla", RED);
+        Button edit = button("Profili Düzenle", YELLOW);
         actions.addView(sound, buttonCell());
-        actions.addView(reset, buttonCell());
+        actions.addView(edit, buttonCell());
         c.addView(actions, height(52));
 
-        guest.setOnClickListener(v -> { profile = "Misafir"; input.setText(""); save(); show(0); });
-        saveBtn.setOnClickListener(v -> { String s = input.getText().toString().trim(); profile = s.length() == 0 ? "Misafir" : s; save(); show(0); });
+        profileBtn.setOnClickListener(v -> showProfileDialog());
+        edit.setOnClickListener(v -> showProfileDialog());
         sound.setOnClickListener(v -> { soundOn = !soundOn; save(); show(0); });
-        reset.setOnClickListener(v -> { clearAll(); show(0); });
         return c;
     }
 
+    private void showProfileDialog() {
+        Dialog dlg = new Dialog(this);
+        dlg.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout c = card();
+        c.addView(text("Profil ve Güvenli Ayarlar", 22, TEXT, true), wrap());
+        c.addView(text("Pano sade kalsın diye kullanıcı ve sıfırlama seçenekleri burada.", 14, SUB, false), margins(0, 6, 0, 12));
+        EditText input = input("Adını yaz veya misafir kal");
+        if (!"Misafir".equals(profile)) input.setText(profile);
+        c.addView(input, heightMargins(52, 0, 0, 0, 10));
+
+        LinearLayout row1 = buttonRow();
+        Button guest = softButton("Misafir");
+        Button saveBtn = button("Kaydet", YELLOW2);
+        row1.addView(guest, buttonCell());
+        row1.addView(saveBtn, buttonCell());
+        c.addView(row1, heightMargins(54, 0, 0, 0, 8));
+
+        Button reset = button("Tüm Verileri Sıfırla", RED);
+        Button close = softButton("Kapat");
+        c.addView(reset, heightMargins(54, 0, 0, 0, 8));
+        c.addView(close, height(54));
+
+        guest.setOnClickListener(v -> { profile = "Misafir"; save(); dlg.dismiss(); show(0); });
+        saveBtn.setOnClickListener(v -> { String s = input.getText().toString().trim(); profile = s.length() == 0 ? "Misafir" : s; save(); dlg.dismiss(); show(0); });
+        reset.setOnClickListener(v -> { clearAll(); dlg.dismiss(); show(0); });
+        close.setOnClickListener(v -> dlg.dismiss());
+
+        dlg.setContentView(c);
+        Window w = dlg.getWindow();
+        dlg.show();
+        if (dlg.getWindow() != null) dlg.getWindow().setLayout(-1, -2);
+    }
+
 '''
-            text = text.replace('    private LinearLayout profileCard() {\n', quickSettings + '    private LinearLayout profileCard() {\n')
+
+        if (text.contains('private LinearLayout homeQuickSettingsCard()')) {
+            text = text.replaceFirst(/(?s)    private LinearLayout homeQuickSettingsCard\(\) \{.*?\n    \}\n\n/, compactQuickSettings)
+            if (text.contains('private void showProfileDialog()')) {
+                text = text.replaceFirst(/(?s)    private void showProfileDialog\(\) \{.*?\n    \}\n\n    private LinearLayout profileCard\(\)/, '    private LinearLayout profileCard()')
+            }
+        } else {
+            text = text.replace('    private LinearLayout profileCard() {\n', compactQuickSettings + '    private LinearLayout profileCard() {\n')
         }
 
         String newAiMethods = '''    private void addAiPlanTasks() {
@@ -166,8 +192,8 @@ tasks.register('patchMainActivityAiUi') {
         if (!text.contains('AiStudyCoach.advice(minutes, target, openTaskCount(), daysToExamInt(), examName)')) {
             throw new GradleException('MainActivity AI coach patch was not applied')
         }
-        if (!text.contains('homeQuickSettingsCard()')) {
-            throw new GradleException('MainActivity compact home settings patch was not applied')
+        if (!text.contains('showProfileDialog()')) {
+            throw new GradleException('MainActivity compact profile dialog patch was not applied')
         }
 
         file.setText(text, 'UTF-8')
