@@ -8,7 +8,7 @@ tasks.register('patchHomeFlowActions') {
         String text = file.getText('UTF-8').replace('\r\n', '\n')
 
         String oldAi = '        ai.setOnClickListener(v -> show(4));'
-        String newAi = '''        ai.setOnClickListener(v -> {
+        String oldAiDirect = '''        ai.setOnClickListener(v -> {
             if (tasks.isEmpty()) {
                 addAiPlanTasks();
                 save();
@@ -18,6 +18,8 @@ tasks.register('patchHomeFlowActions') {
                 show(4);
             }
         });'''
+        String newAi = '        ai.setOnClickListener(v -> showAiQuickDialog());'
+        if (text.contains(oldAiDirect)) text = text.replace(oldAiDirect, newAi)
         if (text.contains(oldAi)) text = text.replace(oldAi, newAi)
 
         String oldLine = '            c.addView(text("Bugün görev yok. AI sekmesinden hazır çalışma planı oluşturabilirsin.", 15, SUB, false), wrap());'
@@ -79,8 +81,43 @@ tasks.register('patchHomeFlowActions') {
             text = text.replace('    private void addAiPlanTasks() {\n', helper + '    private void addAiPlanTasks() {\n')
         }
 
-        if (!text.contains('AI Plan Hazır') || !text.contains('startFocusSession("Matematik", 25, true)') || !text.contains('startFocusSession(task.category, task.minutes, false)')) {
-            throw new GradleException('Home flow advanced action patch was not applied')
+        if (!text.contains('private void showAiQuickDialog()')) {
+            String dialog = '''    private void showAiQuickDialog() {
+        Dialog dlg = new Dialog(this);
+        dlg.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout c = card();
+        c.addView(text("AI Günlük Rehber", 22, TEXT, true), wrap());
+        c.addView(text(aiAdvice(), 15, SUB, false), margins(0, 8, 0, 12));
+        LinearLayout stats = row();
+        stats.addView(summaryWide("Bugün", minutes + " dk", BLUE), weightCell());
+        stats.addView(summaryWide("Açık görev", openTaskCount() + "", RED), weightCell());
+        c.addView(stats, margins(0, 0, 0, 10));
+
+        Button plan = button(tasks.isEmpty() ? "Planı Görevlere Ekle" : "Planı Güncelle", GREEN);
+        Button start = button("25 dk Başlat", YELLOW2);
+        Button aiPage = button("AI Sayfasına Git", LILAC);
+        Button close = softButton("Kapat");
+        c.addView(plan, heightMargins(54, 0, 0, 0, 8));
+        c.addView(start, heightMargins(54, 0, 0, 0, 8));
+        c.addView(aiPage, heightMargins(54, 0, 0, 0, 8));
+        c.addView(close, height(52));
+
+        plan.setOnClickListener(v -> { addAiPlanTasks(); save(); dlg.dismiss(); show(0); });
+        start.setOnClickListener(v -> { dlg.dismiss(); startFocusSession("Matematik", 25, true); });
+        aiPage.setOnClickListener(v -> { dlg.dismiss(); show(4); });
+        close.setOnClickListener(v -> dlg.dismiss());
+
+        dlg.setContentView(c);
+        dlg.show();
+        if (dlg.getWindow() != null) dlg.getWindow().setLayout(-1, -2);
+    }
+
+'''
+            text = text.replace('    private void startFocusSession(String category, int min, boolean autoStart) {\n', dialog + '    private void startFocusSession(String category, int min, boolean autoStart) {\n')
+        }
+
+        if (!text.contains('showAiQuickDialog()') || !text.contains('AI Günlük Rehber') || !text.contains('startFocusSession("Matematik", 25, true)') || !text.contains('startFocusSession(task.category, task.minutes, false)')) {
+            throw new GradleException('Home AI quick dialog patch was not applied')
         }
 
         file.setText(text, 'UTF-8')
