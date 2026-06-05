@@ -29,7 +29,7 @@ tasks.register('patchMainActivityAiUi') {
         root.addView(navBar, margins(0, 8, 0, 12));
         setContentView(root);'''
         String polishedNavBlock = '''        navBar = navBar();
-        root.addView(navBar, margins(0, 8, 0, 12));
+        root.addView(navBar, margins(0, 8, 0, 10));
         configureSystemBars(root);
         setContentView(root);'''
         if (!text.contains('configureSystemBars(root);')) {
@@ -53,11 +53,11 @@ tasks.register('patchMainActivityAiUi') {
             int navigationBar = Math.max(insets.getSystemWindowInsetBottom(), dp(48));
             view.setPadding(dp(18), Math.max(dp(18), statusBar + dp(8)), dp(18), dp(10));
             if (content != null) {
-                content.setPadding(0, 0, 0, Math.max(dp(32), navigationBar + dp(24)));
+                content.setPadding(0, 0, 0, Math.max(dp(24), navigationBar + dp(12)));
             }
             if (navBar != null) {
                 ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) navBar.getLayoutParams();
-                params.bottomMargin = navigationBar + dp(18);
+                params.bottomMargin = navigationBar + dp(10);
                 navBar.setLayoutParams(params);
             }
             return insets;
@@ -67,6 +67,67 @@ tasks.register('patchMainActivityAiUi') {
 
 '''
             text = text.replace('    private void show(int tab) {\n', systemBarMethod + '    private void show(int tab) {\n')
+        }
+
+        // If the method already exists from an older patch, tune the excessive bottom spacing.
+        text = text.replace('content.setPadding(0, 0, 0, Math.max(dp(32), navigationBar + dp(24)));',
+                'content.setPadding(0, 0, 0, Math.max(dp(24), navigationBar + dp(12)));')
+        text = text.replace('params.bottomMargin = navigationBar + dp(18);',
+                'params.bottomMargin = navigationBar + dp(10);')
+
+        String oldHome = '''        content.addView(motivationCard(), margins(0, 0, 0, 14));
+        content.addView(profileCard(), margins(0, 0, 0, 14));
+        content.addView(settingsCard(), margins(0, 0, 0, 16));'''
+        String newHome = '''        content.addView(motivationCard(), margins(0, 0, 0, 14));
+        content.addView(homeQuickSettingsCard(), margins(0, 0, 0, 16));'''
+        text = text.replace(oldHome, newHome)
+
+        if (!text.contains('private LinearLayout homeQuickSettingsCard()')) {
+            String quickSettings = '''    private LinearLayout homeQuickSettingsCard() {
+        LinearLayout c = card();
+        LinearLayout top = row();
+        LinearLayout left = column();
+        left.addView(text("Profil & Hızlı Ayar", 20, TEXT, true), wrap());
+        left.addView(text("Hedef, ses ve kullanıcı seçimini buradan yönet", 14, SUB, false), margins(0, 4, 0, 0));
+        top.addView(left, new LinearLayout.LayoutParams(0, -2, 1));
+        top.addView(pill(profile, LILAC), fixed(110, 42));
+        c.addView(top, margins(0, 0, 0, 12));
+
+        EditText input = input("Adını yaz veya misafir kal");
+        if (!"Misafir".equals(profile)) input.setText(profile);
+        c.addView(input, heightMargins(50, 0, 0, 0, 8));
+
+        LinearLayout profileRow = buttonRow();
+        Button guest = softButton("Misafir");
+        Button saveBtn = button("Kaydet", YELLOW2);
+        profileRow.addView(guest, buttonCell());
+        profileRow.addView(saveBtn, buttonCell());
+        c.addView(profileRow, heightMargins(52, 0, 0, 0, 10));
+
+        c.addView(text("Günlük hedef", 14, TEXT, true), margins(0, 0, 0, 8));
+        LinearLayout goals = buttonRow();
+        goals.addView(targetButton("30", 30), buttonCell());
+        goals.addView(targetButton("60", 60), buttonCell());
+        goals.addView(targetButton("90", 90), buttonCell());
+        goals.addView(targetButton("120", 120), buttonCell());
+        c.addView(goals, heightMargins(50, 0, 0, 0, 8));
+
+        LinearLayout actions = buttonRow();
+        Button sound = button(soundOn ? "Ses: Açık" : "Ses: Kapalı", BLUE);
+        Button reset = button("Verileri Sıfırla", RED);
+        actions.addView(sound, buttonCell());
+        actions.addView(reset, buttonCell());
+        c.addView(actions, height(52));
+
+        guest.setOnClickListener(v -> { profile = "Misafir"; input.setText(""); save(); show(0); });
+        saveBtn.setOnClickListener(v -> { String s = input.getText().toString().trim(); profile = s.length() == 0 ? "Misafir" : s; save(); show(0); });
+        sound.setOnClickListener(v -> { soundOn = !soundOn; save(); show(0); });
+        reset.setOnClickListener(v -> { clearAll(); show(0); });
+        return c;
+    }
+
+'''
+            text = text.replace('    private LinearLayout profileCard() {\n', quickSettings + '    private LinearLayout profileCard() {\n')
         }
 
         String newAiMethods = '''    private void addAiPlanTasks() {
@@ -104,6 +165,9 @@ tasks.register('patchMainActivityAiUi') {
         }
         if (!text.contains('AiStudyCoach.advice(minutes, target, openTaskCount(), daysToExamInt(), examName)')) {
             throw new GradleException('MainActivity AI coach patch was not applied')
+        }
+        if (!text.contains('homeQuickSettingsCard()')) {
+            throw new GradleException('MainActivity compact home settings patch was not applied')
         }
 
         file.setText(text, 'UTF-8')
