@@ -10,14 +10,7 @@ android {
         applicationId 'com.sezr.focuspro.nativeapp'
         minSdk 23
         targetSdk 35
-        versionCode 18
-        versionName '1.1.7-professional-ui'
-    }
-
-    buildTypes {
-        debug {
-            applicationIdSuffix '.debug'
-            versionNameSuffix '-debug'
-        }
+        versionCode 19
+        versionName '1.1.8-professional-ui-fix'
     }
 }
