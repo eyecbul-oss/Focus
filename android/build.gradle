@@ -3,3 +3,4 @@ plugins {
 }
 
 apply from: 'patch-mainactivity-ai-ui.gradle'
+apply from: 'patch-home-flow-actions.gradle'
