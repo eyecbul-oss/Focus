@@ -1,0 +1,102 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Upgrades report screen cards with clearer daily summary, weekly bars and category distribution.
+tasks.register('patchReportPolish') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        String newReportCard = '''    private LinearLayout reportCard() {
+        LinearLayout c = card();
+        c.addView(text("Günlük Rapor", 22, TEXT, true), wrap());
+        c.addView(text(todayText() + " • Hedef takibi", 14, SUB, false), margins(0, 4, 0, 12));
+
+        LinearLayout hero = row();
+        LinearLayout left = column();
+        TextView big = text(minutes + " dk", 44, TEXT, true);
+        left.addView(big, wrap());
+        left.addView(text("Bugünkü toplam odak", 14, SUB, false), wrap());
+        hero.addView(left, new LinearLayout.LayoutParams(0, -2, 1));
+        hero.addView(summaryBox("🎯", "Başarı", "%" + progress(), progress() >= 100 ? GREEN : YELLOW), fixed(112, 112));
+        c.addView(hero, margins(0, 0, 0, 12));
+
+        c.addView(progressBar(progress(), progress() >= 100 ? GREEN2 : YELLOW2), height(16));
+        c.addView(text("Hedef: " + target + " dk • Kalan: " + Math.max(0, target - minutes) + " dk", 14, SUB, false), margins(0, 8, 0, 12));
+
+        LinearLayout r = row();
+        r.addView(summaryWide("Seans", sessions + "", BLUE), weightCell());
+        r.addView(summaryWide("Ortalama", sessions == 0 ? "0 dk" : (minutes / Math.max(1, sessions)) + " dk", GREEN), weightCell());
+        c.addView(r, margins(0, 0, 0, 10));
+
+        LinearLayout r2 = row();
+        r2.addView(summaryWide("Haftalık", weeklyTotal() + " dk", LILAC), weightCell());
+        r2.addView(summaryWide("Açık görev", openTaskCount() + "", RED), weightCell());
+        c.addView(r2, wrap());
+        return c;
+    }
+
+'''
+
+        String newWeeklyCard = '''    private LinearLayout weeklyCard() {
+        LinearLayout c = card();
+        LinearLayout top = row();
+        top.addView(text("Haftalık Çalışma", 22, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+        top.addView(pill(weeklyTotal() + " dk", GREEN), fixed(100, 42));
+        c.addView(top, margins(0, 0, 0, 12));
+        String[] names = {"Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"};
+        int max = 1; for (int v : week) if (v > max) max = v;
+        for (int i = 0; i < 7; i++) {
+            String color = i == todayIndex() ? YELLOW2 : (week[i] > 0 ? BLUE2 : "#EDF1F7");
+            c.addView(chartRow(names[i], week[i], max, color), margins(0, 8, 0, 0));
+        }
+        c.addView(text("Bugünün satırı sarı renkle vurgulanır.", 13, SUB, false), margins(0, 12, 0, 0));
+        return c;
+    }
+
+'''
+
+        String newCategoryCard = '''    private LinearLayout categoryReportCard() {
+        LinearLayout c = card();
+        c.addView(text("Kategori Dağılımı", 22, TEXT, true), wrap());
+        c.addView(text("Matematik, problem, okuma ve sınav çalışmalarının oranı", 14, SUB, false), margins(0, 4, 0, 10));
+        String[] names = {"Matematik", "Problem", "Okuma", "Sınav", "Diğer"};
+        String[] colors = {GREEN2, ORANGE, BLUE2, RED, LILAC};
+        int total = 0; for (int v : categories) total += v;
+        for (int i = 0; i < names.length; i++) {
+            int pct = total == 0 ? 0 : Math.round(categories[i] * 100f / total);
+            LinearLayout row = column();
+            LinearLayout line = row();
+            line.addView(text(names[i], 15, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+            line.addView(text(categories[i] + " dk • %" + pct, 14, SUB, true), fixed(116, 28));
+            row.addView(line, wrap());
+            row.addView(progressBar(pct, colors[i]), heightMargins(14, 0, 4, 0, 0));
+            c.addView(row, margins(0, 8, 0, 0));
+        }
+        if (total == 0) c.addView(text("Henüz kategori verisi yok. Odak seansı tamamlayınca grafikler dolacak.", 14, SUB, false), margins(0, 12, 0, 0));
+        return c;
+    }
+
+'''
+
+        text = text.replaceFirst(/(?s)    private LinearLayout reportCard\(\) \{.*?\n    \}\n\n    private LinearLayout weeklyCard\(\)/, newReportCard + '    private LinearLayout weeklyCard()')
+        text = text.replaceFirst(/(?s)    private LinearLayout weeklyCard\(\) \{.*?\n    \}\n\n    private LinearLayout categoryReportCard\(\)/, newWeeklyCard + '    private LinearLayout categoryReportCard()')
+        text = text.replaceFirst(/(?s)    private LinearLayout categoryReportCard\(\) \{.*?\n    \}\n\n    private LinearLayout achievementsCard\(\)/, newCategoryCard + '    private LinearLayout achievementsCard()')
+
+        if (!text.contains('Haftalık Çalışma') || !text.contains('Bugünkü toplam odak') || !text.contains('Kategori Dağılımı')) {
+            throw new GradleException('Report polish patch was not applied')
+        }
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchReportPolish')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchReportPolish')
+}
