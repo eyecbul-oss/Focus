@@ -1,0 +1,52 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Adds real quick actions to the empty home flow card without rewriting the whole MainActivity.
+tasks.register('patchHomeFlowActions') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        String oldLine = '            c.addView(text("Bugün görev yok. AI sekmesinden hazır çalışma planı oluşturabilirsin.", 15, SUB, false), wrap());'
+        String newBlock = '''            c.addView(text("Bugün görev yok. Hızlıca plan oluşturabilir veya doğrudan odak seansına başlayabilirsin.", 15, SUB, false), margins(0, 0, 0, 10));
+            LinearLayout quick = buttonRow();
+            Button makePlan = button("AI Planı Oluştur", GREEN);
+            Button startNow = button("25 dk Başlat", YELLOW2);
+            quick.addView(makePlan, buttonCell());
+            quick.addView(startNow, buttonCell());
+            c.addView(quick, height(52));
+            makePlan.setOnClickListener(v -> { addAiPlanTasks(); save(); show(0); });
+            startNow.setOnClickListener(v -> {
+                breakMode = false;
+                focusCategory = "Matematik";
+                focusDuration = 25 * 60;
+                seconds = focusDuration;
+                running = true;
+                handler.removeCallbacks(tick);
+                if (!"Sessiz".equals(musicMode)) ambient.play(musicMode);
+                if (strictMode) strictDialog();
+                handler.post(tick);
+                show(1);
+            });'''
+
+        if (text.contains(oldLine)) {
+            text = text.replace(oldLine, newBlock)
+        }
+
+        if (!text.contains('AI Planı Oluştur') || !text.contains('25 dk Başlat')) {
+            throw new GradleException('Home flow quick action patch was not applied')
+        }
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchHomeFlowActions')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchHomeFlowActions')
+}
