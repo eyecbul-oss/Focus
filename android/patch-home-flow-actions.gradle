@@ -1,11 +1,24 @@
 import org.gradle.api.tasks.compile.JavaCompile
 
-// Adds real quick actions to the empty home flow card without rewriting the whole MainActivity.
+// Adds real quick actions to the home flow card without rewriting the whole MainActivity.
 tasks.register('patchHomeFlowActions') {
     doLast {
         File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
         if (!file.exists()) return
         String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        String oldAi = '        ai.setOnClickListener(v -> show(4));'
+        String newAi = '''        ai.setOnClickListener(v -> {
+            if (tasks.isEmpty()) {
+                addAiPlanTasks();
+                save();
+                simpleDialog("AI Plan Hazır", "Bugüne uygun çalışma planı görev listene eklendi. İlk görevi Bugünün akışı kartından başlatabilirsin.", "Tamam", GREEN).show();
+                show(0);
+            } else {
+                show(4);
+            }
+        });'''
+        if (text.contains(oldAi)) text = text.replace(oldAi, newAi)
 
         String oldLine = '            c.addView(text("Bugün görev yok. AI sekmesinden hazır çalışma planı oluşturabilirsin.", 15, SUB, false), wrap());'
         String newBlock = '''            c.addView(text("Bugün görev yok. Hızlıca plan oluşturabilir veya doğrudan odak seansına başlayabilirsin.", 15, SUB, false), margins(0, 0, 0, 10));
@@ -16,7 +29,10 @@ tasks.register('patchHomeFlowActions') {
             quick.addView(startNow, buttonCell());
             c.addView(quick, height(52));
             makePlan.setOnClickListener(v -> { addAiPlanTasks(); save(); show(0); });
-            startNow.setOnClickListener(v -> {
+            startNow.setOnClickListener(v -> startFocusSession("Matematik", 25, true));'''
+        if (text.contains(oldLine)) text = text.replace(oldLine, newBlock)
+
+        String oldStartBlock = '''            startNow.setOnClickListener(v -> {
                 breakMode = false;
                 focusCategory = "Matematik";
                 focusDuration = 25 * 60;
@@ -28,13 +44,43 @@ tasks.register('patchHomeFlowActions') {
                 handler.post(tick);
                 show(1);
             });'''
+        text = text.replace(oldStartBlock, '            startNow.setOnClickListener(v -> startFocusSession("Matematik", 25, true));')
 
-        if (text.contains(oldLine)) {
-            text = text.replace(oldLine, newBlock)
+        String oldPreview = '''        r.addView(text((task.done ? "✓ " : "○ ") + task.text, 15, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+        r.addView(pill(task.minutes + " dk", task.color()), fixed(82, 38));
+        return r;'''
+        String newPreview = '''        r.addView(text((task.done ? "✓ " : "○ ") + task.text, 15, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+        r.addView(pill(task.minutes + " dk", task.color()), fixed(82, 38));
+        if (!task.done) r.setOnClickListener(v -> startFocusSession(task.category, task.minutes, false));
+        return r;'''
+        if (text.contains(oldPreview)) text = text.replace(oldPreview, newPreview)
+
+        if (!text.contains('private void startFocusSession(String category, int min, boolean autoStart)')) {
+            String helper = '''    private void startFocusSession(String category, int min, boolean autoStart) {
+        breakMode = false;
+        focusCategory = category;
+        focusDuration = Math.max(1, min) * 60;
+        seconds = focusDuration;
+        if (autoStart) {
+            running = true;
+            handler.removeCallbacks(tick);
+            if (!"Sessiz".equals(musicMode)) ambient.play(musicMode);
+            if (strictMode) strictDialog();
+            handler.post(tick);
+        } else {
+            running = false;
+            handler.removeCallbacks(tick);
+        }
+        save();
+        show(1);
+    }
+
+'''
+            text = text.replace('    private void addAiPlanTasks() {\n', helper + '    private void addAiPlanTasks() {\n')
         }
 
-        if (!text.contains('AI Planı Oluştur') || !text.contains('25 dk Başlat')) {
-            throw new GradleException('Home flow quick action patch was not applied')
+        if (!text.contains('AI Plan Hazır') || !text.contains('startFocusSession("Matematik", 25, true)') || !text.contains('startFocusSession(task.category, task.minutes, false)')) {
+            throw new GradleException('Home flow advanced action patch was not applied')
         }
 
         file.setText(text, 'UTF-8')
