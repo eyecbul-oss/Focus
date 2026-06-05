@@ -1,0 +1,94 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Adds the real circular progress ring to the Focus tab without rewriting the whole MainActivity source.
+tasks.register('patchFocusRingUi') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        text = text.replace(
+            'private TextView timerText, statusText, profileText, musicText, examText, notesText, settingsText, fullTimer, fullStatus;\n    private Button timerButton, fullButton;',
+            'private TextView timerText, statusText, profileText, musicText, examText, notesText, settingsText, fullTimer, fullStatus;\n    private FocusRingView focusRing;\n    private Button timerButton, fullButton;'
+        )
+
+        String modernTimerCard = '''    private LinearLayout timerCard() {
+        LinearLayout c = card();
+        c.setGravity(Gravity.CENTER);
+
+        LinearLayout top = row();
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        top.addView(pill(breakMode ? "Mola" : focusCategory, breakMode ? BLUE : GREEN), new LinearLayout.LayoutParams(0, dp(44), 1));
+        top.addView(pill(breakMode ? "MOLA" : "ODAK", breakMode ? BLUE2 : YELLOW2), fixed(104, 44));
+        c.addView(top, margins(0, 0, 0, 12));
+
+        LinearLayout ringWrap = column();
+        ringWrap.setGravity(Gravity.CENTER);
+        focusRing = new FocusRingView(this);
+        ringWrap.addView(focusRing, fixed(240, 240));
+        timerText = text(format(seconds), 58, TEXT, true);
+        timerText.setGravity(Gravity.CENTER);
+        ringWrap.addView(timerText, margins(0, -152, 0, 0));
+        statusText = text(running ? (breakMode ? "Mola çalışıyor" : "Odak seansı çalışıyor") : "Hazır", 16, SUB, false);
+        statusText.setGravity(Gravity.CENTER);
+        ringWrap.addView(statusText, margins(0, 8, 0, 24));
+        c.addView(ringWrap, margins(0, 0, 0, 8));
+
+        LinearLayout modes = buttonRow();
+        modes.addView(modeButton("25 dk", 25), buttonCell());
+        modes.addView(modeButton("45 dk", 45), buttonCell());
+        modes.addView(modeButton("60 dk", 60), buttonCell());
+        c.addView(modes, heightMargins(54, 0, 0, 0, 8));
+
+        LinearLayout breaks = buttonRow();
+        breaks.addView(breakButton("5 dk mola", 5), buttonCell());
+        breaks.addView(breakButton("10 dk mola", 10), buttonCell());
+        breaks.addView(breakButton("15 dk mola", 15), buttonCell());
+        c.addView(breaks, heightMargins(54, 0, 0, 0, 12));
+
+        LinearLayout actions = buttonRow();
+        timerButton = button(running ? "Duraklat" : "Başlat", breakMode ? BLUE2 : GREEN2);
+        Button reset = softButton("Sıfırla");
+        actions.addView(timerButton, new LinearLayout.LayoutParams(0, dp(58), 1.35f));
+        actions.addView(reset, buttonCell());
+        c.addView(actions, margins(0, 0, 0, 8));
+
+        Button full = button("Tam Ekran Odak Modu", LILAC);
+        c.addView(full, height(56));
+        timerButton.setOnClickListener(v -> toggleTimer());
+        reset.setOnClickListener(v -> resetTimer());
+        full.setOnClickListener(v -> showFullscreen());
+        updateTimer();
+        return c;
+    }'''
+
+        text = text.replaceFirst(/(?s)    private LinearLayout timerCard\(\) \{.*?\n    \}\n\n    private LinearLayout categoryCard\(\)/, modernTimerCard + '\n\n    private LinearLayout categoryCard()')
+
+        text = text.replace(
+            'private void updateTimer() { if (timerText != null) timerText.setText(format(seconds)); syncFull(); }',
+            'private void updateTimer() {\n        if (timerText != null) timerText.setText(format(seconds));\n        if (focusRing != null) {\n            int total = Math.max(1, focusDuration);\n            int pct = Math.round((total - seconds) * 100f / total);\n            focusRing.setState(pct, breakMode);\n        }\n        syncFull();\n    }'
+        )
+
+        if (!text.contains('private FocusRingView focusRing;')) {
+            throw new GradleException('Focus ring field patch was not applied')
+        }
+        if (!text.contains('focusRing.setState(pct, breakMode);')) {
+            throw new GradleException('Focus ring update patch was not applied')
+        }
+        if (!text.contains('Tam Ekran Odak Modu')) {
+            throw new GradleException('Modern timer card patch was not applied')
+        }
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchFocusRingUi')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchFocusRingUi')
+}
