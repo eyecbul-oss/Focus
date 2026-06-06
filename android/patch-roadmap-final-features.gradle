@@ -1,0 +1,83 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Roadmap steps 6-10: student/teacher mode, reminders, richer fullscreen focus, data-based badges, final UI touches.
+tasks.register('patchRoadmapFinalFeatures') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        // Add app mode card to AI tab so it does not bloat Pano.
+        text = text.replace('        content.addView(aiCoachCard(), margins(0, 0, 0, 14));\n        content.addView(aiPlanCard(), margins(0, 0, 0, 14));',
+                '        content.addView(aiCoachCard(), margins(0, 0, 0, 14));\n        content.addView(appModeCard(), margins(0, 0, 0, 14));\n        content.addView(aiPlanCard(), margins(0, 0, 0, 14));')
+
+        if (!text.contains('private LinearLayout appModeCard()')) {
+            String modeCard = '''    private LinearLayout appModeCard() {
+        LinearLayout c = card();
+        c.addView(text("Kullanım Modu", 22, TEXT, true), wrap());
+        c.addView(text("Öğrenci kendi çalışmasını, öğretmen ise öğrenciler için görev/rapor mantığını takip eder.", 14, SUB, false), margins(0, 6, 0, 12));
+        LinearLayout r = buttonRow();
+        Button student = button(userMode.equals("Öğrenci") ? "✓ Öğrenci" : "Öğrenci", userMode.equals("Öğrenci") ? GREEN2 : BLUE);
+        Button teacher = button(userMode.equals("Öğretmen") ? "✓ Öğretmen" : "Öğretmen", userMode.equals("Öğretmen") ? YELLOW2 : LILAC);
+        r.addView(student, buttonCell());
+        r.addView(teacher, buttonCell());
+        c.addView(r, height(54));
+        c.addView(text(userMode.equals("Öğretmen") ? "Öğretmen modu: ileride öğrenci listesi, ödev atama ve rapor paylaşımı için hazırlandı." : "Öğrenci modu: kişisel hedef, odak, görev ve rapor takibi aktif.", 14, SUB, false), margins(0, 10, 0, 0));
+        student.setOnClickListener(v -> { userMode = "Öğrenci"; save(); show(4); });
+        teacher.setOnClickListener(v -> { userMode = "Öğretmen"; save(); show(4); });
+        return c;
+    }
+
+'''
+            text = text.replace('    private LinearLayout aiPlanCard() {\n', modeCard + '    private LinearLayout aiPlanCard() {\n')
+        }
+
+        // Improve fullscreen focus information.
+        text = text.replace('c.addView(text("Ses: " + musicMode + " • Katı mod: " + (strictMode ? "Açık" : "Kapalı"), 15, SUB, false), margins(0, 0, 0, 18));',
+                'c.addView(text("Aktif görev: " + activeTaskTitle(), 15, SUB, false), margins(0, 0, 0, 8));\n        c.addView(text("Ses: " + musicMode + " • Katı mod: " + (strictMode ? "Açık" : "Kapalı") + " • Mola: " + breakDuration + " dk", 15, SUB, false), margins(0, 0, 0, 18));')
+
+        if (!text.contains('private String activeTaskTitle()')) {
+            String activeMethod = '''    private String activeTaskTitle() {
+        if (activeTaskIndex >= 0 && activeTaskIndex < tasks.size()) return tasks.get(activeTaskIndex).text.replace("AI Plan: ", "");
+        return breakMode ? "Mola" : "Serbest odak";
+    }
+
+'''
+            text = text.replace('    private void showCompleteDialog(int earned) {\n', activeMethod + '    private void showCompleteDialog(int earned) {\n')
+        }
+
+        // Better completion dialog for linked task.
+        text = text.replace('String msg = breakMode ? "Molan bitti. Şimdi kısa bir odak seansına dönebilirsin." : earned + " dk odak süresi eklendi. AI rehber raporunu güncelledi.";',
+                'String msg = breakMode ? FocusNotificationHelper.breakDoneText() : FocusNotificationHelper.sessionDoneText(earned, focusCategory) + " Aktif görev: " + activeTaskTitle() + ".";')
+
+        // Add reminder card into AI coach card if not already present.
+        text = text.replace('Button refresh = button("AI Günlük Özeti Oluştur", GREEN);\n        c.addView(refresh, height(56));',
+                'c.addView(text("Hatırlatma: " + FocusNotificationHelper.reminderText(minutes, target, daysToExamInt(), openTaskCount()), 14, SUB, false), margins(0, 0, 0, 12));\n        Button refresh = button("AI Günlük Özeti Oluştur", GREEN);\n        c.addView(refresh, height(56));')
+        text = text.replace('Button refresh = button("Kısa Takip Özeti Oluştur", GREEN);\n        c.addView(refresh, height(56));',
+                'c.addView(text("Hatırlatma: " + FocusNotificationHelper.reminderText(minutes, target, daysToExamInt(), openTaskCount()), 14, SUB, false), margins(0, 0, 0, 12));\n        Button refresh = button("AI Günlük Özeti Oluştur", GREEN);\n        c.addView(refresh, height(56));')
+
+        // Data-based achievement details.
+        text = text.replace('c.addView(text(badgeCount() + " / 10 başarı açıldı", 16, SUB, false), margins(0, 6, 0, 12));',
+                'c.addView(text(badgeCount() + " / 10 başarı açıldı • Seri: " + streakDays() + " gün • En uzun: " + longestStreak + " gün", 16, SUB, false), margins(0, 6, 0, 12));')
+
+        // Make Pano title a little clearer after final polishing.
+        text = text.replace('content.addView(title("Pano", todayText()), margins(0, 0, 0, 14));',
+                'content.addView(title("Pano", todayText() + " • " + userMode + " modu"), margins(0, 0, 0, 14));')
+
+        if (!text.contains('appModeCard()') || !text.contains('activeTaskTitle()') || !text.contains('FocusNotificationHelper.reminderText')) {
+            throw new GradleException('Roadmap final feature patch was not applied')
+        }
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchRoadmapFinalFeatures')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchRoadmapFinalFeatures')
+}
