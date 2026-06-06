@@ -1,0 +1,42 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Validates that the roadmap patches produced the expected MainActivity shape before javac.
+tasks.register('patchRoadmapPreflight') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) throw new GradleException('MainActivity.java not found')
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+        def required = [
+            'activeTaskIndex',
+            'activeSessionStartMillis',
+            'sessionHistory',
+            'userMode',
+            'startTaskSession',
+            'recordFocusSession',
+            'historySummaryCard',
+            'appModeCard',
+            'activeTaskTitle',
+            'FocusNotificationHelper.reminderText',
+            'AiStudyCoach.priorityLabel'
+        ]
+        required.each { item ->
+            if (!text.contains(item)) throw new GradleException('Roadmap preflight missing: ' + item)
+        }
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchRoadmapPreflight')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchRoadmapPreflight')
+}
+
+gradle.projectsEvaluated {
+    if (tasks.findByName('patchRoadmapPreflight') != null && tasks.findByName('patchRoadmapFinalFeatures') != null) {
+        tasks.named('patchRoadmapPreflight').configure { mustRunAfter tasks.named('patchRoadmapFinalFeatures') }
+    }
+}
