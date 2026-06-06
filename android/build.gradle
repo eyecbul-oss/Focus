@@ -10,6 +10,7 @@ apply from: 'patch-smart-task-cards.gradle'
 apply from: 'patch-report-timeline.gradle'
 apply from: 'patch-production-core-data.gradle'
 apply from: 'patch-roadmap-final-features.gradle'
+apply from: 'patch-roadmap-stability.gradle'
 
 gradle.projectsEvaluated {
     def order = [
@@ -19,7 +20,8 @@ gradle.projectsEvaluated {
         'patchSmartTaskCards',
         'patchReportTimeline',
         'patchProductionCoreData',
-        'patchRoadmapFinalFeatures'
+        'patchRoadmapFinalFeatures',
+        'patchRoadmapStability'
     ]
     for (int i = 1; i < order.size(); i++) {
         if (tasks.findByName(order[i]) != null && tasks.findByName(order[i - 1]) != null) {
