@@ -1,0 +1,49 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+tasks.register('patchRoadmapStability') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        if (text.contains('homeQuickSettingsCard()')) {
+            text = text.replace('        content.addView(profileCard(), margins(0, 0, 0, 14));\n        content.addView(settingsCard(), margins(0, 0, 0, 16));',
+                    '        content.addView(homeQuickSettingsCard(), margins(0, 0, 0, 16));')
+        }
+
+        text = text.replace('        ai.setOnClickListener(v -> show(4));', '''        ai.setOnClickListener(v -> {
+            if (tasks.isEmpty()) {
+                addAiPlanTasks();
+                save();
+                show(0);
+                simpleDialog("AI Plan Hazır", "Bugünün çalışma planı görevlerine eklendi.", "Tamam", GREEN).show();
+            } else {
+                show(4);
+            }
+        });''')
+
+        text = text.replace('        content.addView(timelineCard(), margins(0, 0, 0, 14));\n        content.addView(timelineCard(), margins(0, 0, 0, 14));',
+                '        content.addView(timelineCard(), margins(0, 0, 0, 14));')
+        text = text.replace('        content.addView(historySummaryCard(), margins(0, 0, 0, 14));\n        content.addView(historySummaryCard(), margins(0, 0, 0, 14));',
+                '        content.addView(historySummaryCard(), margins(0, 0, 0, 14));')
+
+        text = text.replace('        activeSessionStartMillis = 0L;\n    }', '        activeSessionStartMillis = 0L;\n        activeTaskIndex = -1;\n    }')
+
+        if (!text.contains('startTaskSession(index)')) throw new GradleException('missing task session link')
+        if (!text.contains('session_history')) throw new GradleException('missing session history')
+        if (!text.contains('appModeCard()')) throw new GradleException('missing app mode')
+        if (!text.contains('activeTaskTitle()')) throw new GradleException('missing active task title')
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchRoadmapStability')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchRoadmapStability')
+}
