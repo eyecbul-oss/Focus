@@ -10,7 +10,7 @@ android {
         applicationId 'com.sezr.focuspro.nativeapp'
         minSdk 23
         targetSdk 35
-        versionCode 27
-        versionName '1.2.6-smart-task-cards'
+        versionCode 28
+        versionName '1.2.7-report-timeline'
     }
 }
