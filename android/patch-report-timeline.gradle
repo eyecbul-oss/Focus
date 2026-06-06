@@ -1,0 +1,67 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Adds a real daily timeline-style card to the Reports tab.
+tasks.register('patchReportTimeline') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        String oldReports = '''        content.addView(reportCard(), margins(0, 0, 0, 14));
+        content.addView(weeklyCard(), margins(0, 0, 0, 14));'''
+        String newReports = '''        content.addView(reportCard(), margins(0, 0, 0, 14));
+        content.addView(timelineCard(), margins(0, 0, 0, 14));
+        content.addView(weeklyCard(), margins(0, 0, 0, 14));'''
+        text = text.replace(oldReports, newReports)
+
+        if (!text.contains('private LinearLayout timelineCard()')) {
+            String method = '''    private LinearLayout timelineCard() {
+        LinearLayout c = card();
+        LinearLayout top = row();
+        LinearLayout left = column();
+        left.addView(text("Günlük Zaman Çizelgesi", 22, TEXT, true), wrap());
+        left.addView(text("Görev sürelerini ve tamamlanma durumunu tek bakışta gör", 14, SUB, false), margins(0, 4, 0, 0));
+        top.addView(left, new LinearLayout.LayoutParams(0, -2, 1));
+        top.addView(pill(doneTaskCount() + " / " + tasks.size(), GREEN), fixed(96, 40));
+        c.addView(top, margins(0, 0, 0, 12));
+
+        if (tasks.isEmpty()) {
+            c.addView(text("Bugün çizelgeye eklenmiş görev yok. AI Planı Oluştur butonuyla çalışma akışını başlatabilirsin.", 15, SUB, false), wrap());
+            return c;
+        }
+
+        int max = 1;
+        for (FocusTask t : tasks) if (t.minutes > max) max = t.minutes;
+        int total = 0;
+        for (FocusTask t : tasks) total += t.minutes;
+
+        for (FocusTask t : tasks) {
+            String label = (t.done ? "✓ " : "○ ") + t.category + " • " + t.text.replace("AI Plan: ", "");
+            c.addView(chartRow(label, t.minutes, max, t.done ? GREEN2 : t.color()), margins(0, 8, 0, 0));
+        }
+
+        c.addView(text("Planlanan toplam süre: " + total + " dk • Tamamlanan: " + doneTaskCount() + " görev", 14, SUB, false), margins(0, 12, 0, 0));
+        return c;
+    }
+
+'''
+            text = text.replace('    private LinearLayout weeklyCard() {\n', method + '    private LinearLayout weeklyCard() {\n')
+        }
+
+        if (!text.contains('timelineCard()')) {
+            throw new GradleException('Report timeline patch was not applied')
+        }
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchReportTimeline')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchReportTimeline')
+}
