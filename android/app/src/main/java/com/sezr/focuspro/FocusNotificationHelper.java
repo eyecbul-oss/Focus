@@ -22,4 +22,20 @@ public final class FocusNotificationHelper {
         channel.setDescription("Odak seansı ve hedef hatırlatmaları");
         manager.createNotificationChannel(channel);
     }
+
+    public static String reminderText(int todayMinutes, int targetMinutes, int daysToExam, int openTasks) {
+        if (todayMinutes <= 0) return "Bugün henüz odak seansı yok. 25 dakika ile başla.";
+        if (todayMinutes < targetMinutes) return "Günlük hedefe " + Math.max(0, targetMinutes - todayMinutes) + " dk kaldı.";
+        if (openTasks > 0) return "Hedef tamam, açık görevleri kısa tekrar ile kapat.";
+        if (daysToExam <= 30) return "Sınav yaklaşıyor; deneme ve yanlış analizi yap.";
+        return "Hedef tamamlandı. Kısa tekrar iyi olur.";
+    }
+
+    public static String sessionDoneText(int minutes, String category) {
+        return minutes + " dk " + category + " odak seansı tamamlandı.";
+    }
+
+    public static String breakDoneText() {
+        return "Mola bitti. Yeni odak seansına dönebilirsin.";
+    }
 }
