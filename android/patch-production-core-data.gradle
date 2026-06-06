@@ -1,0 +1,181 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Roadmap steps 1-5 core: persistence, session history, task-timer binding, real reports, smarter AI data.
+tasks.register('patchProductionCoreData') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        if (!text.contains('private int activeTaskIndex = -1;')) {
+            text = text.replace('    private final List<String> notes = new ArrayList<>();\n', '''    private final List<String> notes = new ArrayList<>();
+    private int activeTaskIndex = -1;
+    private long activeSessionStartMillis = 0L;
+    private String sessionHistory = "";
+    private String userMode = "Öğrenci";
+    private int longestStreak = 0;
+''')
+        }
+
+        // Make task play buttons bind the active task to the timer.
+        text = text.replace('focusCategory = tasks.get(index).category;\n                focusDuration = tasks.get(index).minutes * 60;\n                seconds = focusDuration;\n                show(1);',
+                'startTaskSession(index);')
+        text = text.replace('focusCategory = tasks.get(index).category; focusDuration = tasks.get(index).minutes * 60; seconds = focusDuration; show(1);',
+                'startTaskSession(index);')
+
+        // Record real session history when a focus session finishes.
+        String oldTickBlock = '''            if (!breakMode) {
+                minutes += earned;
+                sessions++;
+                week[todayIndex()] += earned;
+                categories[categoryIndex(focusCategory)] += earned;
+            }
+            save();
+            if (soundOn) beep();
+            showCompleteDialog(earned);
+            show(activeTab);'''
+        String newTickBlock = '''            if (!breakMode) {
+                minutes += earned;
+                sessions++;
+                week[todayIndex()] += earned;
+                categories[categoryIndex(focusCategory)] += earned;
+                recordFocusSession(earned);
+                updateStreakAfterStudy();
+            }
+            save();
+            if (soundOn) beep();
+            showCompleteDialog(earned);
+            show(activeTab);'''
+        text = text.replace(oldTickBlock, newTickBlock)
+
+        // Add report history cards to the report screen.
+        text = text.replace('        content.addView(reportCard(), margins(0, 0, 0, 14));\n        content.addView(timelineCard(), margins(0, 0, 0, 14));',
+                '        content.addView(reportCard(), margins(0, 0, 0, 14));\n        content.addView(historySummaryCard(), margins(0, 0, 0, 14));\n        content.addView(timelineCard(), margins(0, 0, 0, 14));')
+        text = text.replace('        content.addView(reportCard(), margins(0, 0, 0, 14));\n        content.addView(weeklyCard(), margins(0, 0, 0, 14));',
+                '        content.addView(reportCard(), margins(0, 0, 0, 14));\n        content.addView(historySummaryCard(), margins(0, 0, 0, 14));\n        content.addView(timelineCard(), margins(0, 0, 0, 14));\n        content.addView(weeklyCard(), margins(0, 0, 0, 14));')
+
+        if (!text.contains('private void startTaskSession(int index)')) {
+            String methods = '''    private void startTaskSession(int index) {
+        if (index < 0 || index >= tasks.size()) return;
+        FocusTask task = tasks.get(index);
+        activeTaskIndex = index;
+        activeSessionStartMillis = System.currentTimeMillis();
+        breakMode = false;
+        focusCategory = task.category;
+        focusDuration = Math.max(1, task.minutes) * 60;
+        seconds = focusDuration;
+        save();
+        show(1);
+    }
+
+    private void recordFocusSession(int earnedMinutes) {
+        String taskTitle = activeTaskIndex >= 0 && activeTaskIndex < tasks.size() ? tasks.get(activeTaskIndex).text.replace("AI Plan: ", "") : "Serbest odak";
+        boolean taskDone = activeTaskIndex >= 0 && activeTaskIndex < tasks.size() && tasks.get(activeTaskIndex).done;
+        long end = System.currentTimeMillis();
+        long start = activeSessionStartMillis > 0 ? activeSessionStartMillis : end - (earnedMinutes * 60L * 1000L);
+        String date = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date(end));
+        String startTime = new SimpleDateFormat("HH:mm", Locale.US).format(new Date(start));
+        String endTime = new SimpleDateFormat("HH:mm", Locale.US).format(new Date(end));
+        String line = date + "|" + startTime + "|" + endTime + "|" + earnedMinutes + "|" + clean(focusCategory) + "|" + clean(taskTitle) + "|" + (taskDone ? "1" : "0") + "|" + breakDuration;
+        sessionHistory = (sessionHistory == null ? "" : sessionHistory) + line + "\n";
+        activeSessionStartMillis = 0L;
+    }
+
+    private void updateStreakAfterStudy() {
+        String today = dayKey();
+        String last = prefs.getString("last_study_day", "");
+        int streak = prefs.getInt("streak_days", 0);
+        if (!today.equals(last)) {
+            streak = isYesterday(last) ? streak + 1 : 1;
+            longestStreak = Math.max(longestStreak, streak);
+            prefs.edit().putString("last_study_day", today).putInt("streak_days", streak).putInt("longest_streak", longestStreak).apply();
+        }
+    }
+
+    private boolean isYesterday(String key) {
+        try {
+            Calendar c = Calendar.getInstance();
+            c.add(Calendar.DAY_OF_YEAR, -1);
+            return new SimpleDateFormat("yyyyMMdd", Locale.US).format(c.getTime()).equals(key);
+        } catch (Exception e) { return false; }
+    }
+
+    private int streakDays() { return prefs == null ? 0 : prefs.getInt("streak_days", 0); }
+
+    private int sessionCountFromHistory() {
+        if (sessionHistory == null || sessionHistory.trim().length() == 0) return 0;
+        int count = 0;
+        for (String line : sessionHistory.split("\\n")) if (line.trim().length() > 0) count++;
+        return count;
+    }
+
+    private int minutesForPeriod(String prefix) {
+        int total = 0;
+        if (sessionHistory == null) return 0;
+        for (String line : sessionHistory.split("\\n")) {
+            if (line.startsWith(prefix)) {
+                String[] p = line.split("\\|", 8);
+                if (p.length > 3) total += toInt(p[3], 0);
+            }
+        }
+        return total;
+    }
+
+    private String weakestCategoryText() {
+        String[] names = {"Matematik", "Problem", "Okuma", "Sınav", "Diğer"};
+        int min = Integer.MAX_VALUE;
+        String result = "Henüz veri yok";
+        for (int i = 0; i < names.length; i++) {
+            if (categories[i] > 0 && categories[i] < min) { min = categories[i]; result = names[i] + " • " + categories[i] + " dk"; }
+        }
+        return result;
+    }
+
+    private LinearLayout historySummaryCard() {
+        LinearLayout c = card();
+        c.addView(text("Gerçek Çalışma Geçmişi", 22, TEXT, true), wrap());
+        c.addView(text("Seanslar artık tarih, saat, kategori, görev ve mola bilgisiyle saklanır.", 14, SUB, false), margins(0, 6, 0, 12));
+        LinearLayout r1 = row();
+        r1.addView(summaryWide("Seans Kaydı", sessionCountFromHistory() + " adet", BLUE), weightCell());
+        r1.addView(summaryWide("Seri", streakDays() + " gün", GREEN), weightCell());
+        c.addView(r1, margins(0, 0, 0, 8));
+        LinearLayout r2 = row();
+        String todayPrefix = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+        String monthPrefix = new SimpleDateFormat("yyyy-MM", Locale.US).format(new Date());
+        r2.addView(summaryWide("Bugün", minutesForPeriod(todayPrefix) + " dk", YELLOW), weightCell());
+        r2.addView(summaryWide("Bu Ay", minutesForPeriod(monthPrefix) + " dk", LILAC), weightCell());
+        c.addView(r2, margins(0, 0, 0, 8));
+        c.addView(text("En zayıf alan: " + weakestCategoryText(), 15, SUB, false), wrap());
+        return c;
+    }
+
+'''
+            text = text.replace('    private void renderNotes() {\n', methods + '    private void renderNotes() {\n')
+        }
+
+        // Load/save new persistent fields.
+        text = text.replace('examDate = prefs.getString("exam_date", "2026-06-20");',
+                'examDate = prefs.getString("exam_date", "2026-06-20");\n        sessionHistory = prefs.getString("session_history", "");\n        userMode = prefs.getString("user_mode", "Öğrenci");\n        longestStreak = prefs.getInt("longest_streak", 0);')
+        text = text.replace('.putString("exam_name", examName).putString("exam_date", examDate).putString("tasks", tb.toString()).putString("notes", nb.toString())',
+                '.putString("exam_name", examName).putString("exam_date", examDate).putString("tasks", tb.toString()).putString("notes", nb.toString())\n            .putString("session_history", sessionHistory == null ? "" : sessionHistory).putString("user_mode", userMode).putInt("longest_streak", longestStreak)')
+
+        // Clear all should clear new data too.
+        text = text.replace('tasks.clear(); notes.clear();', 'tasks.clear(); notes.clear(); sessionHistory = ""; activeTaskIndex = -1; activeSessionStartMillis = 0L;')
+
+        if (!text.contains('session_history') || !text.contains('recordFocusSession') || !text.contains('startTaskSession')) {
+            throw new GradleException('Production core data patch was not applied')
+        }
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchProductionCoreData')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchProductionCoreData')
+}
