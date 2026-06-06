@@ -11,24 +11,24 @@ apply from: 'patch-report-timeline.gradle'
 apply from: 'patch-production-core-data.gradle'
 apply from: 'patch-roadmap-final-features.gradle'
 apply from: 'patch-roadmap-stability.gradle'
+apply from: 'patch-roadmap-preflight.gradle'
 
 gradle.projectsEvaluated {
     def order = [
         'patchMainActivityAiUi',
         'patchHomeFlowActions',
+        'patchReportPolish',
         'patchAiSuggestButton',
         'patchSmartTaskCards',
         'patchReportTimeline',
         'patchProductionCoreData',
         'patchRoadmapFinalFeatures',
-        'patchRoadmapStability'
+        'patchRoadmapStability',
+        'patchRoadmapPreflight'
     ]
     for (int i = 1; i < order.size(); i++) {
         if (tasks.findByName(order[i]) != null && tasks.findByName(order[i - 1]) != null) {
             tasks.named(order[i]).configure { mustRunAfter tasks.named(order[i - 1]) }
         }
-    }
-    if (tasks.findByName('patchReportPolish') != null && tasks.findByName('patchHomeFlowActions') != null) {
-        tasks.named('patchReportPolish').configure { mustRunAfter tasks.named('patchHomeFlowActions') }
     }
 }
