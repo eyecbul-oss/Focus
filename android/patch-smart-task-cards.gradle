@@ -1,0 +1,103 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// Improves task cards with local AI priority labels and clearer metadata.
+tasks.register('patchSmartTaskCards') {
+    doLast {
+        File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
+        if (!file.exists()) return
+        String text = file.getText('UTF-8').replace('\r\n', '\n')
+
+        String oldMethod = '''    private void renderTasks() {
+        if (taskBox == null) return;
+        taskBox.removeAllViews();
+        if (tasks.isEmpty()) { taskBox.addView(text("Henüz görev eklenmedi.", 14, SUB, false), wrap()); return; }
+        for (int i = 0; i < tasks.size(); i++) {
+            final int index = i;
+            FocusTask task = tasks.get(i);
+            LinearLayout r = row();
+            r.setGravity(Gravity.CENTER_VERTICAL);
+            r.setPadding(dp(10), dp(8), dp(10), dp(8));
+            r.setBackground(bg(task.done ? GREEN : "#FFFFFF", 16, "#E5E7EF"));
+            TextView label = text(task.text + "\n" + task.category + " • " + task.minutes + " dk", 15, task.done ? "#147A44" : TEXT, false);
+            if (task.done) label.setPaintFlags(label.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            r.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
+            Button play = button("▶", task.color());
+            Button done = button(task.done ? "Geri" : "✓", task.done ? LILAC : GREEN);
+            r.addView(play, fixed(50, 46));
+            LinearLayout.LayoutParams p = fixed(58, 46); p.setMargins(dp(6), 0, 0, 0); r.addView(done, p);
+            play.setOnClickListener(v -> { breakMode = false; focusCategory = tasks.get(index).category; focusDuration = tasks.get(index).minutes * 60; seconds = focusDuration; show(1); });
+            done.setOnClickListener(v -> { tasks.get(index).done = !tasks.get(index).done; save(); renderTasks(); });
+            taskBox.addView(r, margins(0, 0, 0, 8));
+        }
+    }'''
+
+        String newMethod = '''    private void renderTasks() {
+        if (taskBox == null) return;
+        taskBox.removeAllViews();
+        if (tasks.isEmpty()) {
+            taskBox.addView(text("Henüz görev eklenmedi. Pano veya AI sekmesinden plan oluşturabilirsin.", 14, SUB, false), wrap());
+            return;
+        }
+        for (int i = 0; i < tasks.size(); i++) {
+            final int index = i;
+            FocusTask task = tasks.get(i);
+            String priority = AiStudyCoach.priorityLabel(task.minutes, task.done, task.category, daysToExamInt());
+            boolean aiTask = task.text.startsWith("AI Plan:");
+
+            LinearLayout box = column();
+            box.setPadding(dp(12), dp(10), dp(12), dp(10));
+            box.setBackground(bg(task.done ? GREEN : "#FFFFFF", 20, task.done ? "#BFEBD8" : "#E5E7EF"));
+
+            LinearLayout top = row();
+            top.setGravity(Gravity.CENTER_VERTICAL);
+            TextView title = text(task.text.replace("AI Plan: ", ""), 16, task.done ? "#147A44" : TEXT, true);
+            if (task.done) title.setPaintFlags(title.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            top.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
+            top.addView(pill(priority, task.done ? GREEN : ("Çok öncelikli".equals(priority) ? RED : task.color())), fixed(120, 38));
+            box.addView(top, wrap());
+
+            String meta = task.category + " • " + task.minutes + " dk" + (aiTask ? " • AI Plan" : "");
+            box.addView(text(meta, 13, SUB, false), margins(0, 6, 0, 10));
+
+            LinearLayout actions = buttonRow();
+            Button play = button("▶ Başlat", task.color());
+            Button done = button(task.done ? "Geri Al" : "Tamamla", task.done ? LILAC : GREEN);
+            actions.addView(play, buttonCell());
+            actions.addView(done, buttonCell());
+            box.addView(actions, height(48));
+
+            play.setOnClickListener(v -> {
+                breakMode = false;
+                focusCategory = tasks.get(index).category;
+                focusDuration = tasks.get(index).minutes * 60;
+                seconds = focusDuration;
+                show(1);
+            });
+            done.setOnClickListener(v -> { tasks.get(index).done = !tasks.get(index).done; save(); renderTasks(); });
+            taskBox.addView(box, margins(0, 0, 0, 10));
+        }
+    }'''
+
+        if (text.contains(oldMethod)) {
+            text = text.replace(oldMethod, newMethod)
+        } else {
+            text = text.replaceFirst(/(?s)    private void renderTasks\(\) \{.*?\n    \}\n\n    private void renderNotes\(\)/, newMethod + '\n\n    private void renderNotes()')
+        }
+
+        if (!text.contains('AiStudyCoach.priorityLabel(task.minutes')) {
+            throw new GradleException('Smart task card patch was not applied')
+        }
+
+        file.setText(text, 'UTF-8')
+    }
+}
+
+project(':app') {
+    tasks.matching { task -> task.name == 'preBuild' || task.name.endsWith('JavaWithJavac') }.configureEach {
+        dependsOn rootProject.tasks.named('patchSmartTaskCards')
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('patchSmartTaskCards')
+}
