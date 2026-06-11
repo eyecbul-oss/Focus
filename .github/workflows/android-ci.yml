@@ -1,6 +1,7 @@
 name: Android CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -36,15 +37,12 @@ jobs:
       - name: Build APK
         run: gradle :app:assembleDebug --no-daemon --stacktrace
 
-      - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk ../SezR-Focus.apk
-
       - name: Publish APK file
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: sezr-focus-apk
           name: SezR Focus APK
-          files: SezR-Focus.apk
+          files: android/app/build/outputs/apk/debug/app-debug.apk
           prerelease: true
           make_latest: true
