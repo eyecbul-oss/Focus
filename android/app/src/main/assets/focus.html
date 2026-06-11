@@ -35,7 +35,7 @@
 <section class="glass panel settings-panel">
 <div class="panel-head"><div><span class="eyebrow">Ayarlar</span><h2>Focus Kontrol</h2></div><button class="ghost" id="exportCsv">CSV</button></div>
 <div class="settings-grid"><label>Günlük hedef <input id="dailyGoal" type="number" min="10" max="600" step="5"></label><label>Ses modu <select id="soundMode"><option value="silent">Sessiz</option><option value="soft">Yumuşak</option><option value="classic">Klasik</option><option value="alarm">Alarm</option></select></label><label>Tema <select id="themeMode"><option value="dark">Gece</option><option value="blue">Mavi</option><option value="forest">Yeşil</option><option value="light">Açık</option></select></label></div>
-<div class="backup-row"><button class="secondary" id="exportJson">JSON Yedekle</button><button class="secondary" id="importJsonBtn">JSON İçe Aktar</button><input id="importJson" type="file" accept="application/json,.json" hidden></div>
+<div class="backup-row"><button class="secondary" id="exportJson">JSON Yedekle</button><button class="secondary" id="importJsonBtn">JSON İçe Aktar</button><button class="secondary danger" id="resetData">Verileri Sıfırla</button><input id="importJson" type="file" accept="application/json,.json" hidden></div>
 <p class="muted" id="goalText">Bugünkü hedef: 120 dk</p><div class="progress goal-progress"><span id="goalProg"></span></div>
 </section>
 <section class="glass panel level-panel"><div class="panel-head"><div><span class="eyebrow">Seviye</span><h2 id="levelTitle">Başlangıç</h2></div><span class="exam-chip" id="levelChip">Lv 1</span></div><p class="muted" id="levelText">Bir sonraki seviyeye ilerle.</p><div class="progress level-progress"><span id="levelProg"></span></div></section>
