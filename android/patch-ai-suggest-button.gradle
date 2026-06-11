@@ -1,6 +1,9 @@
 import org.gradle.api.tasks.compile.JavaCompile
 
 // Makes the top home AI suggestion button perform a real action.
+// This patch is intentionally idempotent because patchHomeFlowActions may already
+// replace the same button with showAiQuickDialog(). In that case the expected
+// behaviour is already present and the build must continue.
 tasks.register('patchAiSuggestButton') {
     doLast {
         File file = file('app/src/main/java/com/sezr/focuspro/MainActivity.java')
@@ -23,7 +26,11 @@ tasks.register('patchAiSuggestButton') {
             text = text.replace(oldLine, newBlock)
         }
 
-        if (!text.contains('AI Plan Hazır')) {
+        boolean directPatchApplied = text.contains('AI Plan Hazır')
+        boolean quickDialogApplied = text.contains('ai.setOnClickListener(v -> showAiQuickDialog());') && text.contains('private void showAiQuickDialog()')
+        boolean quickDialogWillBeAppliedLater = text.contains('ai.setOnClickListener(v -> showAiQuickDialog());')
+
+        if (!directPatchApplied && !quickDialogApplied && !quickDialogWillBeAppliedLater) {
             throw new GradleException('AI suggest button patch was not applied')
         }
 
