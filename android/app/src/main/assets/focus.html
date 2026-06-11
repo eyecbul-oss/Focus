@@ -20,6 +20,7 @@
 <div class="stats glass"><div class="stat"><b id="todayMin">0</b><span>Dakika</span></div><div class="stat"><b id="todayPom">0</b><span>Seans</span></div><div class="stat"><b id="streak">0</b><span>Seri</span></div><div class="stat"><b id="score">0%</b><span>Odak</span></div><div class="stat"><b id="xp">0</b><span>XP</span></div><div class="stat"><b id="levelNo">1</b><span>Seviye</span></div></div>
 </section>
 <section class="focus-dashboard">
+<section class="glass panel profile-panel"><div class="panel-head"><div><span class="eyebrow">Profil</span><h2>Öğrenci Profili</h2></div></div><div class="settings-grid"><label>Ad Soyad <input id="studentName" placeholder="Öğrenci adı"></label><label>Sınıf <input id="studentClass" placeholder="12 / Mezun / 8"></label><label>Hedef <input id="studentGoal" placeholder="Hedef okul / bölüm"></label></div><p class="muted" id="profileText">Profil bilgileri rapor ve yedekte saklanır.</p></section>
 <section class="glass panel timer-panel focus-card-large">
 <div class="panel-head"><div><span class="eyebrow">Pomodoro</span><h2>Odak Sayacı</h2></div><button class="ghost" id="full">Tam Ekran</button></div>
 <label class="mini-label">Ders seç <select id="subjectSelect"></select></label>
@@ -38,6 +39,7 @@
 <div class="input-row"><input id="hwTitle" placeholder="Ödev / yapılacak çalışma"><button class="primary" id="addHw">Ödev Ekle</button></div>
 <div class="list" id="homeworks"></div><div class="progress"><span id="hwProg"></span></div><p class="muted" id="hwText">Ödev ilerlemesi: %0</p>
 </section>
+<section class="glass panel report-panel"><div class="panel-head"><div><span class="eyebrow">Rapor</span><h2>Akıllı Özet</h2></div><button class="ghost" id="copyReport">Kopyala</button></div><div class="subject-list" id="smartReport"></div></section>
 <section class="glass panel settings-panel">
 <div class="panel-head"><div><span class="eyebrow">Ayarlar</span><h2>Focus Kontrol</h2></div><button class="ghost" id="exportCsv">CSV</button></div>
 <div class="settings-grid"><label>Günlük hedef <input id="dailyGoal" type="number" min="10" max="600" step="5"></label><label>Ses modu <select id="soundMode"><option value="silent">Sessiz</option><option value="soft">Yumuşak</option><option value="classic">Klasik</option><option value="alarm">Alarm</option></select></label><label>Tema <select id="themeMode"><option value="dark">Gece</option><option value="blue">Mavi</option><option value="forest">Yeşil</option><option value="light">Açık</option></select></label></div>
