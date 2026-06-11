@@ -77,7 +77,7 @@ tasks.register('patchProductionCoreData') {
         String startTime = new SimpleDateFormat("HH:mm", Locale.US).format(new Date(start));
         String endTime = new SimpleDateFormat("HH:mm", Locale.US).format(new Date(end));
         String line = date + "|" + startTime + "|" + endTime + "|" + earnedMinutes + "|" + clean(focusCategory) + "|" + clean(taskTitle) + "|" + (taskDone ? "1" : "0") + "|" + breakDuration;
-        sessionHistory = (sessionHistory == null ? "" : sessionHistory) + line + "\n";
+        sessionHistory = (sessionHistory == null ? "" : sessionHistory) + line + "\\n";
         activeSessionStartMillis = 0L;
     }
 
@@ -114,7 +114,7 @@ tasks.register('patchProductionCoreData') {
         if (sessionHistory == null) return 0;
         for (String line : sessionHistory.split("\\n")) {
             if (line.startsWith(prefix)) {
-                String[] p = line.split("\\|", 8);
+                String[] p = line.split("\\\\|", 8);
                 if (p.length > 3) total += toInt(p[3], 0);
             }
         }
