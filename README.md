@@ -7,6 +7,7 @@ SezR Focus, siteye bağlanmadan çalışan yerel Android Focus uygulamasıdır. 
 - Sürüm: `2.0.0-local-focus`
 - Paket: `com.sezr.focuspro.nativeapp`
 - Debug APK çıktısı: `android/app/build/outputs/apk/debug/app-debug.apk`
+- Release çıktısı: GitHub Releases içinde `SezR-Focus.apk`
 
 ## Mantık
 
@@ -38,7 +39,7 @@ android/app/src/main/assets/focus-clean.js
 
 ## APK Üretimi
 
-GitHub Actions, `main` branch'e Android dosyaları push edildiğinde otomatik debug APK üretir.
+GitHub Actions, `main` branch'e push edildiğinde APK üretir ve Release içine doğrudan APK dosyası olarak koyar.
 
 Yerelde build almak için:
 
