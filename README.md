@@ -4,17 +4,18 @@ SezR Focus, siteye bağlanmadan çalışan yerel Android Focus uygulamasıdır. 
 
 ## Güncel Sürüm
 
-- Sürüm: `2.0.0-local-focus`
+- Sürüm: `2.1.1-stable`
 - Paket: `com.sezr.focuspro.nativeapp`
+- Uygulama adı: `SezR Focus`
 - Debug APK çıktısı: `android/app/build/outputs/apk/debug/app-debug.apk`
-- Release çıktısı: GitHub Releases içinde `SezR-Focus.apk`
+- Release çıktısı: GitHub Releases içinde `app-debug.apk`
 
 ## Mantık
 
-Bu repo artık eski native patch sistemini kullanmaz. Ana uygulama sade bir Android kabuğudur ve şu yerel dosyayı açar:
+Bu repo artık eski native patch sistemini kullanmaz. Ana uygulama sade bir Android WebView kabuğudur ve şu yerel dosyayı açar:
 
 ```text
-android/app/src/main/assets/focus.html
+file:///android_asset/focus.html
 ```
 
 Geliştirme bundan sonra şu dosyalar üzerinden yapılır:
@@ -28,18 +29,26 @@ android/app/src/main/assets/focus-clean.js
 
 ## Özellikler
 
+- Siteye bağımlı olmayan APK içi çalışma
 - Pomodoro / odak sayacı
+- Ders bazlı seans ve dakika takibi
 - Görev ekleme ve tamamlama
 - Günlük hedef takibi
-- XP ve seviye mantığı
+- Günlük soru hedefi ve deneme takibi
+- Sınav geri sayımı: YKS, TYT, AYT, YDT, AGS, DGS, ALES, KPSS, YDS, LGS
+- Sınav saatine göre canlı geri sayım
+- XP, seviye ve rozet sistemi
 - Haftalık özet kartı
-- Rozet alanı
+- 30 günlük çalışma haritası
+- CSV dışa aktarma
+- JSON yedekleme ve geri yükleme
+- Verileri sıfırlama
+- Özel SezR Focus ikon ve koyu tema
 - Yerel kayıt: `localStorage`
-- Siteye bağımlı olmayan APK içi çalışma
 
 ## APK Üretimi
 
-GitHub Actions, `main` branch'e push edildiğinde APK üretir ve Release içine doğrudan APK dosyası olarak koyar.
+GitHub Actions, `main` branch'e push edildiğinde APK üretir ve Release içine APK dosyası olarak koyar.
 
 Yerelde build almak için:
 
@@ -48,10 +57,21 @@ cd android
 gradle clean :app:assembleDebug --no-daemon --stacktrace
 ```
 
+## Test Listesi
+
+- Uygulama internetsiz açılıyor mu?
+- Sınav sayacı seçili sınav tarih ve saatine göre azalıyor mu?
+- Ders seçip pomodoro bitirince ders istatistiğine işleniyor mu?
+- Günlük soru hedefi ilerleme çubuğunu güncelliyor mu?
+- JSON yedekleme dosya indiriyor mu?
+- JSON içe aktarma eski veriyi geri getiriyor mu?
+- CSV seans geçmişini çıkarıyor mu?
+- Verileri sıfırla tüm local veriyi temizliyor mu?
+- Yeni ikon cihazda görünüyor mu?
+
 ## Bundan Sonraki Geliştirme
 
-- Asset içindeki Focus arayüzünü büyütmek
-- Ders bazlı istatistikleri güçlendirmek
-- JSON içe/dışa aktarmayı APK içinde daha kullanışlı yapmak
-- Daha iyi mobil kart düzeni oluşturmak
-- Uygulama ikonunu ve splash ekranını yenilemek
+- Ödev ve konu takip modülü
+- Öğrenci profili desteği
+- Daha ayrıntılı haftalık/aylık rapor
+- Bildirim ve hatırlatma sistemi
