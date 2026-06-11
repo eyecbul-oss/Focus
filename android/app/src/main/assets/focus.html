@@ -32,6 +32,12 @@
 <div class="input-row"><input id="task" placeholder="Görev ekle"><button class="primary" id="add">Ekle</button></div>
 <div class="list" id="tasks"></div><div class="progress"><span id="taskProg"></span></div><p class="muted" id="taskText">Görev ilerlemesi: %0</p>
 </section>
+<section class="glass panel homework-panel">
+<div class="panel-head"><div><span class="eyebrow">Ödev</span><h2>Konu & Ödev Takibi</h2></div></div>
+<div class="settings-grid"><label>Ders <select id="hwSubject"></select></label><label>Konu <input id="hwTopic" placeholder="Konu adı"></label><label>Teslim <input id="hwDue" type="date"></label></div>
+<div class="input-row"><input id="hwTitle" placeholder="Ödev / yapılacak çalışma"><button class="primary" id="addHw">Ödev Ekle</button></div>
+<div class="list" id="homeworks"></div><div class="progress"><span id="hwProg"></span></div><p class="muted" id="hwText">Ödev ilerlemesi: %0</p>
+</section>
 <section class="glass panel settings-panel">
 <div class="panel-head"><div><span class="eyebrow">Ayarlar</span><h2>Focus Kontrol</h2></div><button class="ghost" id="exportCsv">CSV</button></div>
 <div class="settings-grid"><label>Günlük hedef <input id="dailyGoal" type="number" min="10" max="600" step="5"></label><label>Ses modu <select id="soundMode"><option value="silent">Sessiz</option><option value="soft">Yumuşak</option><option value="classic">Klasik</option><option value="alarm">Alarm</option></select></label><label>Tema <select id="themeMode"><option value="dark">Gece</option><option value="blue">Mavi</option><option value="forest">Yeşil</option><option value="light">Açık</option></select></label></div>
