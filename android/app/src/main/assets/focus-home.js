@@ -24,20 +24,28 @@ function focusHomeSwitchStudy(){
   if(typeof switchScreen==='function')switchScreen('study');
   else document.querySelectorAll('.tab-btn[data-screen="study"]').forEach(b=>b.click());
 }
-function focusHomeQuickStart(subject,minutes){
+function focusHomeEnsureSubject(subject){
   const select=document.getElementById('subjectSelect');
-  if(select){
-    const has=[...select.options].some(o=>o.value===subject);
-    if(!has){const o=document.createElement('option');o.value=subject;o.textContent=subject;select.appendChild(o)}
-    select.value=subject;
+  if(!select)return;
+  if(![...select.options].some(o=>o.value===subject)){
+    const o=document.createElement('option');o.value=subject;o.textContent=subject;select.appendChild(o);
   }
+  select.value=subject;
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function focusHomeQuickStart(subject,minutes){
   const min=Number(minutes||25);
-  if(typeof total!=='undefined'){total=min*60;remain=total;run=false;if(timer)clearInterval(timer)}
-  document.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('active',Number(b.dataset.min)===min));
-  const status=document.getElementById('status');if(status)status.textContent=subject+' • '+min+' dk hazır';
-  const toggle=document.getElementById('toggle');if(toggle)toggle.textContent='Başlat';
   focusHomeSwitchStudy();
-  if(typeof render==='function')render();
+  setTimeout(()=>{
+    if(typeof fillSelect==='function')fillSelect('subjectSelect',SUBJECTS||[]);
+    focusHomeEnsureSubject(subject);
+    if(typeof total!=='undefined'){total=min*60;remain=total;run=false;if(timer)clearInterval(timer)}
+    document.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('active',Number(b.dataset.min)===min));
+    const status=document.getElementById('status');if(status)status.textContent=subject+' • '+min+' dk hazır';
+    const toggle=document.getElementById('toggle');if(toggle)toggle.textContent='Başlat';
+    if(typeof render==='function')render();
+    setTimeout(()=>focusHomeEnsureSubject(subject),80);
+  },60);
 }
 function focusHomeBind(){
   document.querySelectorAll('.quick-start').forEach(btn=>{
