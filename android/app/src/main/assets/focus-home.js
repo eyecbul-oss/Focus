@@ -12,45 +12,15 @@ function focusHomeRender(){
     focusHomeSetText('homeTrial',trialWeek);
     focusHomeSetText('homeExam',store.exam||'YKS');
     focusHomeSetText('homeFocusChip','%'+pct);
-    let advice='Bugün hedefe başlamak için kısa bir odak seansı seç.';
-    if(pct>=100)advice='Bugünkü dakika hedefi tamamlandı. İstersen soru veya deneme hedefini artır.';
-    else if(left<=30)advice='Hedefe çok az kaldı. 25 dakikalık kısa bir seans yeterli olabilir.';
+    let advice='Bugünün çalışma durumunu kontrol et, sonra Odak sekmesinden çalışmaya başla.';
+    if(pct>=100)advice='Bugünkü dakika hedefi tamamlandı. İstersen YKS veya istatistik ekranını kontrol et.';
+    else if(left<=30)advice='Hedefe az kaldı. Odak sekmesinden kısa bir seans yeterli olabilir.';
     else if(q===0)advice='Bugün henüz soru girişi yok. YKS sekmesinden soru hedefini güncelle.';
     focusHomeSetText('homeAdvice',advice);
     focusHomeSetText('homeStatusText','Bugün '+min+'/'+goal+' dk çalışıldı • Hedefe kalan: '+left+' dk • Soru: '+q+' • Haftalık deneme: '+trialWeek);
   }catch(e){}
 }
-function focusHomeSwitchStudy(){
-  if(typeof switchScreen==='function')switchScreen('study');
-  else document.querySelectorAll('.tab-btn[data-screen="study"]').forEach(b=>b.click());
-}
-function focusHomeEnsureSubject(subject){
-  const select=document.getElementById('subjectSelect');
-  if(!select)return;
-  if(![...select.options].some(o=>o.value===subject)){
-    const o=document.createElement('option');o.value=subject;o.textContent=subject;select.appendChild(o);
-  }
-  select.value=subject;
-  select.dispatchEvent(new Event('change',{bubbles:true}));
-}
-function focusHomeQuickStart(subject,minutes){
-  const min=Number(minutes||25);
-  focusHomeSwitchStudy();
-  setTimeout(()=>{
-    if(typeof fillSelect==='function')fillSelect('subjectSelect',SUBJECTS||[]);
-    focusHomeEnsureSubject(subject);
-    if(typeof total!=='undefined'){total=min*60;remain=total;run=false;if(timer)clearInterval(timer)}
-    document.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('active',Number(b.dataset.min)===min));
-    const status=document.getElementById('status');if(status)status.textContent=subject+' • '+min+' dk hazır';
-    const toggle=document.getElementById('toggle');if(toggle)toggle.textContent='Başlat';
-    if(typeof render==='function')render();
-    setTimeout(()=>focusHomeEnsureSubject(subject),80);
-  },60);
-}
 function focusHomeBind(){
-  document.querySelectorAll('.quick-start').forEach(btn=>{
-    btn.addEventListener('click',()=>focusHomeQuickStart(btn.dataset.subject||'Genel',btn.dataset.min||25));
-  });
   focusHomeRender();
   setInterval(focusHomeRender,2500);
 }
