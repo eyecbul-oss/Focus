@@ -19,6 +19,10 @@ public class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
+        settings.setSupportZoom(false);
+        settings.setBuiltInZoomControls(false);
+        settings.setDisplayZoomControls(false);
+        page.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
         setContentView(page);
         String asset = "file:///android_asset/focus.html";
         page.loadUrl(asset);
