@@ -2,8 +2,7 @@ const $ = q => document.querySelector(q);
 const $$ = q => document.querySelectorAll(q);
 const SUBJECTS = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe','Tarih','Coğrafya','Felsefe','İngilizce'];
 let total = 1500, remain = 1500, run = false, timer = null;
-let data = JSON.parse(localStorage.getItem('focus') || '{"profile":{},"reminder":{"on":"off","time":"19:00","note":"Bugün hedefini tamamla"},"tasks":[],"homeworks":[],"min":0,"pom":0,"goal":120,"theme":"dark","exam":"YKS","examDate":"2026-06-20","qGoal":120,"qDone":0,"trial":0,"subjects":{},"sessions":[]}');
-
+let data = JSON.parse(localStorage.getItem('focus') || '{"profile":{},"reminder":{"on":"off","time":"19:00","note":"Bugün hedefini tamamla"},"tasks":[],"homeworks":[],"min":0,"pom":0,"goal":120,"theme":"dark","exam":"YKS","examDate":"2026-06-20","qGoal":120,"qDone":0,"trial":0,"trials":{},"subjects":{},"sessions":[]}');
 function init(){
   data.profile = data.profile || {};
   data.reminder = data.reminder || {on:'off', time:'19:00', note:'Bugün hedefini tamamla'};
@@ -11,13 +10,15 @@ function init(){
   data.homeworks = data.homeworks || [];
   data.subjects = data.subjects || {};
   data.sessions = data.sessions || [];
+  data.trials = data.trials || {};
   data.goal = data.goal || 120;
   data.theme = data.theme || 'dark';
   data.exam = data.exam || 'YKS';
   data.examDate = data.examDate || defaultExamDate(data.exam);
   data.qGoal = data.qGoal || 120;
   data.qDone = data.qDone || 0;
-  data.trial = data.trial || 0;
+  if(data.trials[today()] === undefined) data.trials[today()] = data.trial || 0;
+  data.trial = data.trials[today()] || 0;
 }
 function save(){ localStorage.setItem('focus', JSON.stringify(data)); }
 function today(){ return new Date().toISOString().slice(0,10); }
@@ -40,10 +41,16 @@ function fillSelect(id,arr){
     arr.forEach(v=>{ let o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
   }
 }
+function last7Dates(){
+  let now=new Date(), out=[];
+  for(let back=6; back>=0; back--){ let d=new Date(now); d.setDate(now.getDate()-back); out.push(d.toISOString().slice(0,10)); }
+  return out;
+}
+function weeklyTrialTotal(){ return last7Dates().reduce((a,k)=>a+(Number(data.trials?.[k]||0)),0); }
 function xpValue(){
   let doneTasks=data.tasks.filter(t=>t.done).length;
   let doneHw=data.homeworks.filter(h=>h.done).length;
-  return (data.min||0)*5+(data.pom||0)*20+doneTasks*10+doneHw*15+(data.qDone||0);
+  return (data.min||0)*5+(data.pom||0)*20+doneTasks*10+doneHw*15+(data.qDone||0)+weeklyTrialTotal()*25;
 }
 function reportText(){
   let top=Object.entries(data.subjects||{}).sort((a,b)=>(b[1].min||0)-(a[1].min||0))[0];
@@ -51,7 +58,7 @@ function reportText(){
   let doneHw=data.homeworks.filter(h=>h.done).length;
   let doneTasks=data.tasks.filter(t=>t.done).length;
   let name=data.profile.name||'Öğrenci';
-  return name+' raporu: '+(data.min||0)+' dk çalışma, '+(data.pom||0)+' seans, '+(data.qDone||0)+' soru, '+doneTasks+'/'+data.tasks.length+' görev, '+doneHw+'/'+data.homeworks.length+' ödev tamamlandı. En güçlü ders: '+(top?top[0]+' ('+(top[1].min||0)+' dk)':'henüz yok')+'. Açık ödev: '+openHw+'.';
+  return name+' raporu: '+(data.min||0)+' dk çalışma, '+(data.pom||0)+' seans, '+(data.qDone||0)+' soru, '+doneTasks+'/'+data.tasks.length+' görev, '+doneHw+'/'+data.homeworks.length+' ödev, son 7 günde '+weeklyTrialTotal()+' deneme. En güçlü ders: '+(top?top[0]+' ('+(top[1].min||0)+' dk)':'henüz yok')+'. Açık ödev: '+openHw+'.';
 }
 function render(){
   document.body.dataset.theme=data.theme||'dark';
@@ -118,7 +125,7 @@ function renderWeek(){
     let min=data.sessions.filter(s=>s.date===key).reduce((a,s)=>a+(s.min||0),0); totalWeek+=min;
     let e=document.createElement('div'); e.className='week-day'; e.innerHTML='<b>'+min+'</b><span>'+names[d.getDay()]+'</span>'; w.appendChild(e);
   }
-  setText('weekText','Son 7 gün toplam: '+totalWeek+' dk');
+  setText('weekText','Son 7 gün toplam: '+totalWeek+' dk • Deneme: '+weeklyTrialTotal());
 }
 function renderSubjects(){
   let box=$('#subjectStats'); if(!box) return;
@@ -149,8 +156,11 @@ function renderOther(){
   let lv=Math.floor(xp/500)+1, next=lv*500, prev=(lv-1)*500, lp=Math.round((xp-prev)/(next-prev)*100);
   setText('levelTitle', lv<3?'Başlangıç':lv<6?'Düzenli Öğrenci':'Odak Ustası'); setText('levelChip','Lv '+lv); setText('levelText','Sonraki seviye için '+Math.max(0,next-xp)+' XP kaldı.');
   $('#levelProg').style.width=Math.min(100,lp)+'%';
-  let qg=data.qGoal||120, qd=data.qDone||0, qp=qg?Math.min(100,Math.round(qd/qg*100)):0;
-  setValue('questionGoal',qg); setValue('questionDone',qd); setValue('trialCount',data.trial||0); setText('yksText','Soru hedefi: '+qd+'/'+qg+' • Tamamlanma: %'+qp+' • Deneme: '+(data.trial||0)); $('#questionProg').style.width=qp+'%';
+  let qg=data.qGoal||120, qd=data.qDone||0, qp=qg?Math.min(100,Math.round(qd/qg*100)):0, tw=weeklyTrialTotal();
+  setValue('questionGoal',qg); setValue('questionDone',qd); setValue('trialCount',data.trials[today()]||0);
+  setText('qTodayBig',qd); setText('qGoalBig',qg); setText('qPercentBig',qp+'%'); setText('trialWeekBig',tw);
+  setText('yksText','Bugün '+qd+'/'+qg+' soru • Tamamlanma: %'+qp+' • Bugünkü deneme: '+(data.trials[today()]||0)+' • Son 7 gün deneme: '+tw);
+  $('#questionProg').style.width=qp+'%';
 }
 function renderReport(){
   let box=$('#smartReport'); if(!box) return;
@@ -167,7 +177,7 @@ function renderMonthly(){
   let doneHw=monthHw.filter(h=>h.done).length;
   let bySubject={}; monthSessions.forEach(s=>bySubject[s.subject]=(bySubject[s.subject]||0)+(s.min||0));
   let top=Object.entries(bySubject).sort((a,b)=>b[1]-a[1])[0];
-  box.innerHTML='<div class="subject-row"><strong>Bu Ay</strong><p class="muted">'+min+' dk • '+monthSessions.length+' seans • '+doneHw+'/'+monthHw.length+' ödev</p></div><div class="subject-row"><strong>Ayın Dersi</strong><p class="muted">'+(top?top[0]+' • '+top[1]+' dk':'Henüz aylık ders verisi yok.')+'</p></div><div class="subject-row"><strong>Hatırlatma</strong><p class="muted">'+(data.reminder.on==='on'?'Aktif: '+data.reminder.time+' • '+data.reminder.note:'Kapalı')+'</p></div>';
+  box.innerHTML='<div class="subject-row"><strong>Bu Ay</strong><p class="muted">'+min+' dk • '+monthSessions.length+' seans • '+doneHw+'/'+monthHw.length+' ödev • Bu hafta '+weeklyTrialTotal()+' deneme</p></div><div class="subject-row"><strong>Ayın Dersi</strong><p class="muted">'+(top?top[0]+' • '+top[1]+' dk':'Henüz aylık ders verisi yok.')+'</p></div><div class="subject-row"><strong>Hatırlatma</strong><p class="muted">'+(data.reminder.on==='on'?'Aktif: '+data.reminder.time+' • '+data.reminder.note:'Kapalı')+'</p></div>';
 }
 function defaultExamDate(k){return {YKS:'2026-06-20',TYT:'2026-06-20',AYT:'2026-06-21',YDT:'2026-06-21',AGS:'2026-07-26',DGS:'2026-07-19',ALES_2:'2026-08-02',KPSS:'2026-09-06',KPSS_ALAN_1:'2026-09-12',KPSS_ALAN_2:'2026-09-13',YDS_2:'2026-11-08',LGS:'2026-06-13'}[k]||'2026-06-20'}
 function defaultExamTime(k){return {YKS:'10:15',TYT:'10:15',AYT:'10:15',YDT:'15:45',AGS:'10:15',DGS:'10:15',ALES_2:'10:15',KPSS:'10:15',KPSS_ALAN_1:'10:15',KPSS_ALAN_2:'10:15',YDS_2:'10:15',LGS:'09:30'}[k]||'10:15'}
@@ -180,6 +190,7 @@ function renderExam(){
 function exportCsv(){
   let rows=['type,date,subject,title_or_minutes,topic,status,timestamp'];
   data.sessions.forEach(s=>rows.push(['session',s.date,s.subject,s.min,'','',new Date(s.ts||Date.now()).toISOString()].join(',')));
+  Object.entries(data.trials||{}).forEach(([date,count])=>rows.push(['trial',date,'YKS',count,'','weekly',''].join(',')));
   data.homeworks.forEach(h=>rows.push(['homework',h.created||'',h.subject,h.title,h.topic||'',h.done?'done':'open',h.due||''].join(',')));
   download('sezr-focus-rapor.csv',rows.join('\n'),'text/csv');
 }
@@ -198,7 +209,7 @@ function bind(){
   $('#copyReport').onclick=()=>{if(navigator.clipboard) navigator.clipboard.writeText(reportText()); alert('Rapor kopyalandı.')};
   $('#dailyGoal').onchange=e=>{data.goal=Number(e.target.value)||120; save(); render()}; $('#themeMode').onchange=e=>{data.theme=e.target.value; save(); render()};
   $('#exam').onchange=e=>{data.exam=e.target.value; data.examDate=defaultExamDate(data.exam); save(); render()}; $('#examDate').onchange=e=>{data.examDate=e.target.value; save(); render()};
-  $('#questionGoal').onchange=e=>{data.qGoal=Number(e.target.value)||0; save(); render()}; $('#questionDone').onchange=e=>{data.qDone=Number(e.target.value)||0; save(); render()}; $('#trialCount').onchange=e=>{data.trial=Number(e.target.value)||0; save(); render()};
+  $('#questionGoal').onchange=e=>{data.qGoal=Number(e.target.value)||0; save(); render()}; $('#questionDone').onchange=e=>{data.qDone=Number(e.target.value)||0; save(); render()}; $('#trialCount').onchange=e=>{data.trials[today()]=Number(e.target.value)||0; data.trial=data.trials[today()]; save(); render()};
   $('#exportCsv').onclick=exportCsv; $('#exportJson').onclick=exportJson; $('#importJsonBtn').onclick=()=>$('#importJson').click(); $('#importJson').onchange=e=>{if(e.target.files&&e.target.files[0]) importJson(e.target.files[0])};
   $('#resetData').onclick=()=>{if(confirm('Tüm Focus verileri silinsin mi?')){localStorage.removeItem('focus'); location.reload()}}; $('#full').onclick=()=>$('#overlay').classList.add('show'); $('#oclose').onclick=()=>$('#overlay').classList.remove('show');
 }
