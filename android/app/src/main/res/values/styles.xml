@@ -4,7 +4,7 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:fontFamily">sans</item>
         <item name="android:windowFullscreen">false</item>
-        <item name="android:windowBackground">#020617</item>
+        <item name="android:windowBackground">@drawable/focus_splash</item>
         <item name="android:colorAccent">#FACC15</item>
         <item name="android:navigationBarColor">#020617</item>
         <item name="android:statusBarColor">#020617</item>
