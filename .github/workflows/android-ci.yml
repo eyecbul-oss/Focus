@@ -5,13 +5,14 @@ on:
   push:
     branches:
       - main
+      - feature/native-reminders-release
 
 permissions:
   contents: write
 
 env:
-  APP_VERSION: 2.2.0
-  APK_NAME: SezR-Focus-2.2.0-debug.apk
+  APP_VERSION: 2.3.0-dev
+  APK_NAME: SezR-Focus-2.3.0-dev-debug.apk
 
 jobs:
   build:
@@ -43,6 +44,7 @@ jobs:
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/${APK_NAME}
 
       - name: Publish APK file
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: sezr-focus-apk
