@@ -1,5 +1,22 @@
 # Değişiklik Günlüğü
 
+## 2.3.0-dev
+
+### Eklenenler
+
+- Android tarafına native hatırlatma altyapısı eklendi.
+- `ReminderReceiver` ile cihaz bildirimi gösterme desteği eklendi.
+- WebView içinden Android'e hatırlatma ayarlarını aktaran `FocusAndroid` köprüsü eklendi.
+- Hatırlatma açıkken günlük alarm planlama, kapalıyken alarm iptal etme mantığı eklendi.
+
+### Test Edilecekler
+
+- Android 13+ cihazda bildirim izni isteniyor mu?
+- Ayarlar sekmesinde hatırlatma Açık yapılınca seçilen saatte bildirim geliyor mu?
+- Hatırlatma Kapalı yapılınca bildirim iptal oluyor mu?
+- Uygulama internetsiz açılmaya devam ediyor mu?
+- Pomodoro, görev, ödev ve yedekleme özellikleri bozulmadan çalışıyor mu?
+
 ## 2.2.0
 
 ### Eklenenler
