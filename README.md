@@ -10,6 +10,11 @@ SezR Focus, siteye bağlanmadan çalışan yerel Android Focus uygulamasıdır. 
 - Debug APK çıktısı: `android/app/build/outputs/apk/debug/app-debug.apk`
 - Release çıktısı: GitHub Releases içinde `SezR-Focus-2.2.0-debug.apk`
 
+## Proje Belgeleri
+
+- [Değişiklik Günlüğü](CHANGELOG.md)
+- [Yol Haritası](ROADMAP.md)
+
 ## Mantık
 
 Bu repo artık eski native patch sistemini kullanmaz. Ana uygulama sade bir Android WebView kabuğudur ve şu yerel dosyayı açar:
