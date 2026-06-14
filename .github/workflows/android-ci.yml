@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+env:
+  APP_VERSION: 2.2.0
+  APK_NAME: SezR-Focus-2.2.0-debug.apk
+
 jobs:
   build:
     name: Build APK
@@ -36,13 +40,13 @@ jobs:
         run: gradle :app:assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/SezR-Focus-2.2.0-debug.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/${APK_NAME}
 
       - name: Publish APK file
         uses: softprops/action-gh-release@v2
         with:
           tag_name: sezr-focus-apk
-          name: SezR Focus APK
-          files: android/app/build/outputs/apk/debug/SezR-Focus-2.2.0-debug.apk
+          name: SezR Focus APK ${{ env.APP_VERSION }}
+          files: android/app/build/outputs/apk/debug/${{ env.APK_NAME }}
           prerelease: true
           make_latest: true
