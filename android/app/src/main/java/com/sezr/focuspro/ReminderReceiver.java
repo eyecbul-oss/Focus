@@ -1,5 +1,6 @@
 package com.sezr.focuspro;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -7,8 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-
-import androidx.core.app.NotificationCompat;
 
 public class ReminderReceiver extends BroadcastReceiver {
     public static final String CHANNEL_ID = "sezr_focus_reminders";
@@ -33,14 +32,22 @@ public class ReminderReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_focus_launcher)
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(context, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(context);
+        }
+
+        builder.setSmallIcon(R.mipmap.ic_focus_launcher)
                 .setContentTitle("SezR Focus")
                 .setContentText(note)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(note))
                 .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setAutoCancel(true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            builder.setStyle(new Notification.BigTextStyle().bigText(note));
+        }
 
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
