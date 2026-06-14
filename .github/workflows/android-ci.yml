@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - feature/native-reminders-release
+      - feature/study-tracking-upgrades
 
 permissions:
   contents: write
