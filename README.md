@@ -4,11 +4,11 @@ SezR Focus, siteye bağlanmadan çalışan yerel Android Focus uygulamasıdır. 
 
 ## Güncel Sürüm
 
-- Sürüm: `2.1.1-stable`
+- Sürüm: `2.2.0`
 - Paket: `com.sezr.focuspro.nativeapp`
 - Uygulama adı: `SezR Focus`
 - Debug APK çıktısı: `android/app/build/outputs/apk/debug/app-debug.apk`
-- Release çıktısı: GitHub Releases içinde `app-debug.apk`
+- Release çıktısı: GitHub Releases içinde `SezR-Focus-2.2.0-debug.apk`
 
 ## Mantık
 
@@ -18,13 +18,24 @@ Bu repo artık eski native patch sistemini kullanmaz. Ana uygulama sade bir Andr
 file:///android_asset/focus.html
 ```
 
-Geliştirme bundan sonra şu dosyalar üzerinden yapılır:
+Android kabuk dosyası:
+
+```text
+android/app/src/main/java/com/sezr/focuspro/MainActivity.java
+```
+
+Ana geliştirme dosyaları:
 
 ```text
 android/app/src/main/assets/focus.html
 android/app/src/main/assets/focus-harmony.css
 android/app/src/main/assets/focus-task.css
+android/app/src/main/assets/focus-motion.css
+android/app/src/main/assets/focus-friendly.css
+android/app/src/main/assets/focus-splash.css
 android/app/src/main/assets/focus-clean.js
+android/app/src/main/assets/focus-home.js
+android/app/src/main/assets/focus-friendly.js
 ```
 
 ## Özellikler
@@ -33,12 +44,15 @@ android/app/src/main/assets/focus-clean.js
 - Pomodoro / odak sayacı
 - Ders bazlı seans ve dakika takibi
 - Görev ekleme ve tamamlama
+- Konu ve ödev takibi
+- Öğrenci profili
 - Günlük hedef takibi
 - Günlük soru hedefi ve deneme takibi
 - Sınav geri sayımı: YKS, TYT, AYT, YDT, AGS, DGS, ALES, KPSS, YDS, LGS
 - Sınav saatine göre canlı geri sayım
 - XP, seviye ve rozet sistemi
 - Haftalık özet kartı
+- Aylık özet
 - 30 günlük çalışma haritası
 - CSV dışa aktarma
 - JSON yedekleme ve geri yükleme
@@ -48,7 +62,7 @@ android/app/src/main/assets/focus-clean.js
 
 ## APK Üretimi
 
-GitHub Actions, `main` branch'e push edildiğinde APK üretir ve Release içine APK dosyası olarak koyar.
+GitHub Actions, `main` branch'e push edildiğinde APK üretir ve Release içine sürüm adıyla APK dosyası olarak koyar.
 
 Yerelde build almak için:
 
@@ -57,21 +71,41 @@ cd android
 gradle clean :app:assembleDebug --no-daemon --stacktrace
 ```
 
+Build sonrası APK yolu:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+GitHub Release'e eklenen dosya adı:
+
+```text
+SezR-Focus-2.2.0-debug.apk
+```
+
 ## Test Listesi
 
 - Uygulama internetsiz açılıyor mu?
 - Sınav sayacı seçili sınav tarih ve saatine göre azalıyor mu?
 - Ders seçip pomodoro bitirince ders istatistiğine işleniyor mu?
 - Günlük soru hedefi ilerleme çubuğunu güncelliyor mu?
+- Ödev ekleme, tamamlama ve silme çalışıyor mu?
+- Öğrenci profili kaydediliyor mu?
 - JSON yedekleme dosya indiriyor mu?
 - JSON içe aktarma eski veriyi geri getiriyor mu?
 - CSV seans geçmişini çıkarıyor mu?
 - Verileri sıfırla tüm local veriyi temizliyor mu?
 - Yeni ikon cihazda görünüyor mu?
 
+## Bilinen Durumlar
+
+- Çalışma hatırlatması ayarı uygulama içinde kaydedilir.
+- Gerçek Android bildirimleri henüz native olarak bağlanmamıştır; sonraki sürümde `AlarmManager` / `WorkManager` ve bildirim izniyle eklenmelidir.
+
 ## Bundan Sonraki Geliştirme
 
-- Ödev ve konu takip modülü
-- Öğrenci profili desteği
+- Native Android bildirim ve hatırlatma sistemi
+- Release imzalı APK / AAB üretimi
+- Play Store'a uygun sürümleme
 - Daha ayrıntılı haftalık/aylık rapor
-- Bildirim ve hatırlatma sistemi
+- Öğrenci bazlı çoklu profil desteği
