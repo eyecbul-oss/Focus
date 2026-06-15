@@ -38,8 +38,12 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Configure Android build flags
+        run: |
+          printf 'android.useAndroidX=true\nandroid.suppressUnsupportedCompileSdk=35\n' > gradle.properties
+
       - name: Build APK
-        run: gradle :app:assembleDebug --no-daemon --stacktrace -Pandroid.useAndroidX=true -Pandroid.suppressUnsupportedCompileSdk=35
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/${APK_NAME}
