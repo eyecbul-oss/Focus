@@ -95,6 +95,12 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void notifyNow(String note) {
+        Intent intent = new Intent(this, ReminderReceiver.class);
+        intent.putExtra(ReminderReceiver.EXTRA_NOTE, note == null || note.trim().isEmpty() ? "Pomodoro tamamlandı." : note);
+        sendBroadcast(intent);
+    }
+
     public class FocusBridge {
         @JavascriptInterface
         public void setReminder(String enabled, String time, String note) {
@@ -104,6 +110,15 @@ public class MainActivity extends Activity {
                 } else {
                     cancelReminder();
                 }
+            });
+        }
+
+        @JavascriptInterface
+        public void notifyPomodoroDone(String subject, int minutes) {
+            runOnUiThread(() -> {
+                String cleanSubject = subject == null || subject.trim().isEmpty() ? "çalışma" : subject.trim();
+                int cleanMinutes = Math.max(1, minutes);
+                notifyNow(cleanSubject + " için " + cleanMinutes + " dakikalık Pomodoro tamamlandı.");
             });
         }
     }
