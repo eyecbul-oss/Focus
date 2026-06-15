@@ -5,67 +5,14 @@
   function getData(){try{return JSON.parse(localStorage.getItem('focus')||'{}')}catch(e){return {}}}
   function saveData(data){localStorage.setItem('focus',JSON.stringify(data))}
   function applyExamCalendar(){try{var oldDate=window.defaultExamDate,oldTime=window.defaultExamTime;window.defaultExamDate=function(k){return FOCUS_EXAMS[k]?FOCUS_EXAMS[k].date:(oldDate?oldDate(k):'2026-06-20')};window.defaultExamTime=function(k){return FOCUS_EXAMS[k]?FOCUS_EXAMS[k].time:(oldTime?oldTime(k):'10:15')};var d=getData();if(d.exam&&FOCUS_EXAMS[d.exam]&&(!d.examDate||d.examDate==='2026-06-14')){d.examDate=FOCUS_EXAMS[d.exam].date;saveData(d)}if(typeof renderExam==='function')renderExam()}catch(e){}}
-  function ensure(data){
-    data.sessions=data.sessions||[];
-    data.homeworks=data.homeworks||[];
-    data.tasks=data.tasks||[];
-    data.trials=data.trials||{};
-    data.settings=data.settings||{};
-    data.settings.sessionGoal=data.settings.sessionGoal||25;
-    data.settings.shortBreak=data.settings.shortBreak||5;
-    data.settings.longBreak=data.settings.longBreak||15;
-    data.yks=data.yks||{};
-    data.yks.trialNet=data.yks.trialNet||0;
-    data.yks.targetNet=data.yks.targetNet||80;
-    data.yks.strongTopic=data.yks.strongTopic||'';
-    data.students=data.students||[];
-    data.activeStudentId=data.activeStudentId||'default';
-    return data;
-  }
+  function ensure(data){data.sessions=data.sessions||[];data.homeworks=data.homeworks||[];data.tasks=data.tasks||[];data.trials=data.trials||{};data.settings=data.settings||{};data.settings.sessionGoal=data.settings.sessionGoal||25;data.settings.shortBreak=data.settings.shortBreak||5;data.settings.longBreak=data.settings.longBreak||15;data.yks=data.yks||{};data.yks.trialNet=data.yks.trialNet||0;data.yks.targetNet=data.yks.targetNet||80;data.yks.strongTopic=data.yks.strongTopic||'';data.students=data.students||[];data.activeStudentId=data.activeStudentId||'default';return data}
   function setValue(id,value){var el=$('#'+id);if(el)el.value=value}
   function setText(id,text){var el=$('#'+id);if(el)el.textContent=text}
   function sessionMinutes(s){return Number(s.min||s.minutes||0)}
-  function renderHistory(){
-    var box=$('#sessionHistory');
-    if(!box)return;
-    var data=ensure(getData());
-    var list=(data.sessions||[]).slice(-8).reverse();
-    if(!list.length){box.innerHTML='<p class="muted">Henüz oturum geçmişi yok.</p>';return}
-    box.innerHTML='';
-    list.forEach(function(s){
-      var row=document.createElement('div');
-      row.className='subject-row';
-      row.innerHTML='<strong>'+(s.subject||'Genel')+'</strong><p class="muted">'+(s.date||today())+' • '+sessionMinutes(s)+' dk</p>';
-      box.appendChild(row);
-    });
-  }
-  function renderUpgradeTexts(){
-    applyExamCalendar();
-    var data=ensure(getData());
-    var total=(data.sessions||[]).reduce(function(a,s){return a+sessionMinutes(s)},0);
-    var last=(data.sessions||[]).slice(-1)[0];
-    setText('pomodoroText','Toplam '+total+' dk çalışma kaydı var.'+(last?' Son oturum: '+(last.subject||'Genel')+' '+sessionMinutes(last)+' dk.':''));
-    var net=Number(data.yks.trialNet||0), target=Number(data.yks.targetNet||80), diff=Math.max(0,target-net);
-    var yks=$('#yksText');
-    if(yks&&yks.textContent.indexOf('Son net')<0){yks.textContent+=' • Son net: '+net+' • Hedefe kalan: '+diff+' net'+(data.yks.strongTopic?' • Güçlü konu: '+data.yks.strongTopic:'')}
-    renderHistory();
-  }
-  function bindUpgrades(){
-    applyExamCalendar();
-    var data=ensure(getData());saveData(data);
-    setValue('sessionGoal',data.settings.sessionGoal);
-    setValue('shortBreak',data.settings.shortBreak);
-    setValue('longBreak',data.settings.longBreak);
-    setValue('trialNet',data.yks.trialNet);
-    setValue('targetNet',data.yks.targetNet);
-    setValue('strongTopic',data.yks.strongTopic);
-    var sg=$('#sessionGoal'); if(sg)sg.onchange=function(e){var d=ensure(getData());d.settings.sessionGoal=Number(e.target.value)||25;saveData(d);renderUpgradeTexts()};
-    var sb=$('#shortBreak'); if(sb)sb.onchange=function(e){var d=ensure(getData());d.settings.shortBreak=Number(e.target.value)||5;saveData(d);renderUpgradeTexts()};
-    var lb=$('#longBreak'); if(lb)lb.onchange=function(e){var d=ensure(getData());d.settings.longBreak=Number(e.target.value)||15;saveData(d);renderUpgradeTexts()};
-    var tn=$('#trialNet'); if(tn)tn.onchange=function(e){var d=ensure(getData());d.yks.trialNet=Number(e.target.value)||0;saveData(d);renderUpgradeTexts()};
-    var tg=$('#targetNet'); if(tg)tg.onchange=function(e){var d=ensure(getData());d.yks.targetNet=Number(e.target.value)||80;saveData(d);renderUpgradeTexts()};
-    var st=$('#strongTopic'); if(st)st.onchange=function(e){var d=ensure(getData());d.yks.strongTopic=e.target.value||'';saveData(d);renderUpgradeTexts()};
-    var clear=$('#clearHistory'); if(clear)clear.onclick=function(){if(confirm('Oturum geçmişi temizlensin mi?')){var d=ensure(getData());d.sessions=[];saveData(d);renderHistory();renderUpgradeTexts()}}
-  }
+  function renderHistory(){var box=$('#sessionHistory');if(!box)return;var data=ensure(getData());var list=(data.sessions||[]).slice(-8).reverse();if(!list.length){box.innerHTML='<p class="muted">Henüz oturum geçmişi yok.</p>';return}box.innerHTML='';list.forEach(function(s){var row=document.createElement('div');row.className='subject-row';row.innerHTML='<strong>'+(s.subject||'Genel')+'</strong><p class="muted">'+(s.date||today())+' • '+sessionMinutes(s)+' dk</p>';box.appendChild(row)})}
+  function renderTeacher(){var box=$('#teacherStudents');if(!box)return;var data=ensure(getData());box.innerHTML='';if(!data.students.length){box.innerHTML='<p class="muted">Henüz öğrenci eklenmedi.</p>'}data.students.forEach(function(s){var row=document.createElement('div');row.className='subject-row';row.innerHTML='<strong>'+s.name+'</strong><p class="muted">'+(s.className||'Sınıf yok')+' • '+(s.goal||'Hedef yok')+'</p>';row.onclick=function(){data.activeStudentId=s.id;data.profile=data.profile||{};data.profile.name=s.name;data.profile.className=s.className||'';data.profile.goal=s.goal||'';saveData(data);location.reload()};box.appendChild(row)});setText('teacherSummary','Toplam öğrenci: '+data.students.length)}
+  function addTeacherPanel(){var target=$('.screen-settings');if(!target||$('#teacherPanel'))return;var panel=document.createElement('section');panel.className='glass panel teacher-panel';panel.id='teacherPanel';panel.innerHTML='<div class="panel-head"><div><span class="eyebrow">Öğretmen</span><h2>Öğrenci Takibi</h2></div></div><div class="settings-grid"><label>Öğrenci adı <input id="teacherName" placeholder="Ad Soyad"></label><label>Sınıf <input id="teacherClass" placeholder="12 / Mezun / 8"></label><label>Hedef <input id="teacherGoal" placeholder="Hedef okul / bölüm"></label></div><div class="backup-row"><button class="primary" id="teacherAdd">Öğrenci Ekle</button></div><p class="muted" id="teacherSummary">Toplam öğrenci: 0</p><div class="subject-list" id="teacherStudents"></div>';target.insertBefore(panel,target.firstChild);$('#teacherAdd').onclick=function(){var name=($('#teacherName')||{}).value||'';if(!name.trim()){alert('Öğrenci adı yazmalısın.');return}var data=ensure(getData());var id='st_'+Date.now();var cls=($('#teacherClass')||{}).value||'';var goal=($('#teacherGoal')||{}).value||'';data.students.push({id:id,name:name.trim(),className:cls.trim(),goal:goal.trim(),created:new Date().toISOString()});data.activeStudentId=id;data.profile=data.profile||{};data.profile.name=name.trim();data.profile.className=cls.trim();data.profile.goal=goal.trim();saveData(data);location.reload()};renderTeacher()}
+  function renderUpgradeTexts(){applyExamCalendar();var data=ensure(getData());var total=(data.sessions||[]).reduce(function(a,s){return a+sessionMinutes(s)},0);var last=(data.sessions||[]).slice(-1)[0];setText('pomodoroText','Toplam '+total+' dk çalışma kaydı var.'+(last?' Son oturum: '+(last.subject||'Genel')+' '+sessionMinutes(last)+' dk.':''));var net=Number(data.yks.trialNet||0), target=Number(data.yks.targetNet||80), diff=Math.max(0,target-net);var yks=$('#yksText');if(yks&&yks.textContent.indexOf('Son net')<0){yks.textContent+=' • Son net: '+net+' • Hedefe kalan: '+diff+' net'+(data.yks.strongTopic?' • Güçlü konu: '+data.yks.strongTopic:'')}renderHistory();renderTeacher()}
+  function bindUpgrades(){applyExamCalendar();addTeacherPanel();var data=ensure(getData());saveData(data);setValue('sessionGoal',data.settings.sessionGoal);setValue('shortBreak',data.settings.shortBreak);setValue('longBreak',data.settings.longBreak);setValue('trialNet',data.yks.trialNet);setValue('targetNet',data.yks.targetNet);setValue('strongTopic',data.yks.strongTopic);var sg=$('#sessionGoal'); if(sg)sg.onchange=function(e){var d=ensure(getData());d.settings.sessionGoal=Number(e.target.value)||25;saveData(d);renderUpgradeTexts()};var sb=$('#shortBreak'); if(sb)sb.onchange=function(e){var d=ensure(getData());d.settings.shortBreak=Number(e.target.value)||5;saveData(d);renderUpgradeTexts()};var lb=$('#longBreak'); if(lb)lb.onchange=function(e){var d=ensure(getData());d.settings.longBreak=Number(e.target.value)||15;saveData(d);renderUpgradeTexts()};var tn=$('#trialNet'); if(tn)tn.onchange=function(e){var d=ensure(getData());d.yks.trialNet=Number(e.target.value)||0;saveData(d);renderUpgradeTexts()};var tg=$('#targetNet'); if(tg)tg.onchange=function(e){var d=ensure(getData());d.yks.targetNet=Number(e.target.value)||80;saveData(d);renderUpgradeTexts()};var st=$('#strongTopic'); if(st)st.onchange=function(e){var d=ensure(getData());d.yks.strongTopic=e.target.value||'';saveData(d);renderUpgradeTexts()};var clear=$('#clearHistory'); if(clear)clear.onclick=function(){if(confirm('Oturum geçmişi temizlensin mi?')){var d=ensure(getData());d.sessions=[];saveData(d);renderHistory();renderUpgradeTexts()}}}
   window.addEventListener('load',function(){setTimeout(function(){bindUpgrades();renderUpgradeTexts()},300)});
 })();
